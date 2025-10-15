@@ -8,9 +8,9 @@ packages = ["openshift_partner_labs_mcp_server"]
 [project]
 name = "openshift-partner-labs-mcp-server"
 version = "0.1.0"
-description = "A template for Model Context Protocol (MCP) server development"
+description = "OpenShift Partner Labs MCP Server with ACM integration for cluster lifecycle management"
 readme = "README.md"
-keywords = ["mcp", "template", "server"]
+keywords = ["mcp", "openshift", "acm", "cluster-management", "server"]
 requires-python = ">=3.12"
 dependencies = [
     "fastmcp==2.10.4",
@@ -25,6 +25,7 @@ dependencies = [
     "psycopg2-binary==2.9.9",
     "itsdangerous==2.2.0",
     "requests-oauthlib==2.0.0",
+    "kubernetes==31.0.0",
 ]
 
 [project.optional-dependencies]

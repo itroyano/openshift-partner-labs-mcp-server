@@ -281,6 +281,50 @@ class Settings(BaseSettings):
         },
     )
 
+    # OpenShift ACM Configuration
+    ACM_KUBECONFIG_PATH: Optional[str] = Field(
+        default=None,
+        json_schema_extra={
+            "env": "ACM_KUBECONFIG_PATH",
+            "description": "Path to kubeconfig file for ACM cluster access",
+            "example": "/path/to/kubeconfig",
+        },
+    )
+    ACM_NAMESPACE: str = Field(
+        default="open-cluster-management",
+        json_schema_extra={
+            "env": "ACM_NAMESPACE",
+            "description": "Default namespace for ACM operations",
+            "example": "open-cluster-management",
+        },
+    )
+    ACM_DEFAULT_BASE_DOMAIN: Optional[str] = Field(
+        default=None,
+        json_schema_extra={
+            "env": "ACM_DEFAULT_BASE_DOMAIN",
+            "description": "Default base domain for cluster creation",
+            "example": "example.com",
+        },
+    )
+    ACM_GCP_PROJECT_ID: Optional[str] = Field(
+        default=None,
+        json_schema_extra={
+            "env": "ACM_GCP_PROJECT_ID",
+            "description": "GCP Project ID for cluster deployments",
+            "example": "my-gcp-project",
+        },
+    )
+    ACM_CLUSTER_TIMEOUT: int = Field(
+        default=3600,
+        ge=300,
+        le=7200,
+        json_schema_extra={
+            "env": "ACM_CLUSTER_TIMEOUT",
+            "description": "Timeout for cluster operations in seconds",
+            "example": 3600,
+        },
+    )
+
 
 def validate_config(settings: Settings) -> None:
     """Validate configuration settings.
