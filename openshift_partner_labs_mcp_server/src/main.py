@@ -1,4 +1,4 @@
-"""Main entry point for the Template MCP Server."""
+"""Main entry point for the OpenShift Partner Labs MCP Server."""
 
 import sys
 from typing import NoReturn
@@ -83,9 +83,9 @@ def handle_startup_error(error: Exception, context: str = "server startup") -> N
 
 
 def main() -> None:
-    """Main entry point for the MCP server.
+    """Main entry point for the OpenShift Partner Labs MCP server.
 
-    Initializes logging, loads configuration, and starts the Template MCP server.
+    Initializes logging, loads configuration, and starts the Partner Labs MCP server.
     Handles graceful shutdown on keyboard interrupt and logs any startup errors.
 
     Raises:
@@ -121,7 +121,7 @@ def main() -> None:
     except Exception as e:
         handle_startup_error(e, "server startup")
     finally:
-        logger.info("Template MCP server shutting down")
+        logger.info("OpenShift Partner Labs MCP server shutting down")
 
 
 def run() -> None:

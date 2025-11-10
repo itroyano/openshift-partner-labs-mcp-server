@@ -6,123 +6,196 @@ from typing import List, Optional
 from pydantic import BaseModel, Field
 
 
-class User(BaseModel):
-    """User model for cluster ownership tracking."""
-    
+class Company(BaseModel):
+    """Company model for partner organizations."""
+
     id: Optional[int] = None
-    username: str = Field(..., max_length=255)
-    email: str = Field(..., max_length=255)
-    red_hat_uuid: Optional[str] = Field(None, max_length=255)
+    company_name: str = Field(..., max_length=64)
+    curated: bool = Field(default=False)
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
 
 
-class ClusterStatus:
-    """Enum-like class for cluster status values."""
-    
+class LabState:
+    """Enum-like class for lab state values."""
+
     PENDING = "pending"
-    CREATING = "creating"
-    READY = "ready"
-    HIBERNATING = "hibernating"
-    HIBERNATED = "hibernated"
-    RESUMING = "resuming"
-    DELETING = "deleting"
-    DELETED = "deleted"
-    ERROR = "error"
+    APPROVED = "approved"
+    ACTIVE = "active"
+    EXTENDED = "extended"
+    COMPLETED = "completed"
+    DENIED = "denied"
 
 
-class ClusterEventType:
-    """Enum-like class for cluster event types."""
-    
-    CREATED = "created"
-    HIBERNATED = "hibernated"
-    RESUMED = "resumed"
-    DELETED = "deleted"
-    STATUS_CHANGED = "status_changed"
-    OWNERSHIP_TRANSFERRED = "ownership_transferred"
-    ERROR_OCCURRED = "error_occurred"
+class RequestType:
+    """Enum-like class for lab request types."""
+
+    GENERAL = "general"
+    ENGINEERING = "engineering"
+    ROSA = "rosa"
+    RHOAI = "rhoai"
+    NVIDIA = "nvidia"
+    OCPV = "ocpv"  # OpenShift Container Platform Virtualization
 
 
-class Cluster(BaseModel):
-    """Cluster model for managing OpenShift clusters."""
-    
+class CloudProvider:
+    """Enum-like class for cloud provider values."""
+
+    AWS = "AWS"
+    AZURE = "Azure"
+    GOOGLE = "Google"
+    IBM = "IBM"
+    ORACLE = "Oracle"
+    ALIBABA = "Alibaba"
+    LINODE = "Linode"
+    VULTR = "Vultr"
+    DIGITALO = "DigitalO"
+
+
+class Region:
+    """Enum-like class for region values."""
+
+    NA1 = "na1"      # North America 1
+    NA2 = "na2"      # North America 2
+    EMEA = "emea"    # Europe, Middle East, Africa
+    APAC1 = "apac1"  # Asia Pacific 1
+    APAC2 = "apac2"  # Asia Pacific 2
+    LATAM = "latam"  # Latin America
+
+
+class ClusterSize:
+    """Enum-like class for cluster size values."""
+
+    SMALL = "small"
+    MEDIUM = "medium"
+    LARGE = "large"
+    XLARGE = "xlarge"
+    CUSTOM = "custom"
+
+
+class Lab(BaseModel):
+    """Lab model for managing OpenShift Partner Labs."""
+
     id: Optional[int] = None
-    name: str = Field(..., max_length=255)
-    namespace: str = Field(..., max_length=255)
-    owner_id: Optional[int] = None
-    status: str = Field(default=ClusterStatus.PENDING, max_length=50)
-    cluster_type: Optional[str] = Field(None, max_length=100)
-    provider: Optional[str] = Field(None, max_length=100)
-    region: Optional[str] = Field(None, max_length=100)
-    acm_managed_cluster_name: Optional[str] = Field(None, max_length=255)
-    hibernation_enabled: bool = Field(default=False)
+    cluster_id: str = Field(..., max_length=36, description="UUID of the cluster")
+    generated_name: str = Field(..., max_length=32, description="Auto-generated friendly name")
+    state: str = Field(default=LabState.PENDING, max_length=12)
+    cluster_name: str = Field(..., max_length=32, description="Actual cluster name")
+    openshift_version: str = Field(..., max_length=16, description="OpenShift version")
+    cluster_size: str = Field(..., max_length=7, description="Size of the cluster")
+    company_id: Optional[int] = Field(None, description="FK to companies table")
+    request_type: str = Field(..., max_length=12, description="Type of lab request")
+    partner: bool = Field(default=False, description="Is this a partner lab")
+    sponsor: str = Field(..., max_length=64, description="Sponsor email")
+    cloud_provider: str = Field(..., max_length=8, description="Cloud provider")
+
+    # Primary contact information
+    primary_first: str = Field(..., max_length=32, description="Primary contact first name")
+    primary_last: str = Field(..., max_length=32, description="Primary contact last name")
+    primary_email: str = Field(..., max_length=64, description="Primary contact email")
+
+    # Secondary contact information
+    secondary_first: str = Field(..., max_length=32, description="Secondary contact first name")
+    secondary_last: str = Field(..., max_length=32, description="Secondary contact last name")
+    secondary_email: str = Field(..., max_length=64, description="Secondary contact email")
+
+    region: str = Field(..., max_length=5, description="Deployment region")
+    always_on: bool = Field(default=False, description="Keep cluster always running")
+    project_name: str = Field(..., max_length=32, description="Project identifier")
+    lease_time: str = Field(..., max_length=2, description="Lease duration (1d, 1w, 1m, 2w, 2d)")
+    description: str = Field(..., description="Lab description")
+    notes: str = Field(..., description="Additional notes")
+    start_date: datetime = Field(..., description="Lab start date")
+    end_date: datetime = Field(..., description="Lab end date")
+    hold: bool = Field(default=False, description="Put lab on hold")
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
-    deleted_at: Optional[datetime] = None
 
 
-class ClusterEvent(BaseModel):
-    """Cluster event model for audit trail."""
-    
+class LabEvent(BaseModel):
+    """Lab event model for audit trail."""
+
     id: Optional[int] = None
-    cluster_id: int
+    lab_id: int
     event_type: str = Field(..., max_length=100)
     description: Optional[str] = None
     metadata: Optional[dict] = None
     created_at: Optional[datetime] = None
 
 
-class ClusterCreateRequest(BaseModel):
-    """Request model for creating a new cluster."""
-    
-    name: str = Field(..., max_length=255, description="Unique cluster name")
-    namespace: str = Field(..., max_length=255, description="Kubernetes namespace")
-    cluster_type: str = Field(..., max_length=100, description="Type of cluster (e.g., 'ocp', 'rosa')")
-    provider: str = Field(..., max_length=100, description="Cloud provider (e.g., 'aws', 'azure', 'gcp')")
-    region: str = Field(..., max_length=100, description="Cloud region")
-    hibernation_enabled: bool = Field(default=False, description="Enable hibernation support")
-    metadata: Optional[dict] = Field(None, description="Additional cluster configuration")
+class LabCreateRequest(BaseModel):
+    """Request model for creating a new lab."""
+
+    generated_name: str = Field(..., max_length=32, description="Auto-generated friendly name")
+    cluster_name: str = Field(..., max_length=32, description="Actual cluster name")
+    openshift_version: str = Field(..., max_length=16, description="OpenShift version")
+    cluster_size: str = Field(..., max_length=7, description="Size of cluster")
+    company_id: Optional[int] = Field(None, description="Company ID if applicable")
+    request_type: str = Field(..., max_length=12, description="Type of request")
+    partner: bool = Field(default=False, description="Partner lab flag")
+    sponsor: str = Field(..., max_length=64, description="Sponsor email")
+    cloud_provider: str = Field(..., max_length=8, description="Cloud provider")
+
+    # Contact information
+    primary_first: str = Field(..., max_length=32)
+    primary_last: str = Field(..., max_length=32)
+    primary_email: str = Field(..., max_length=64)
+    secondary_first: str = Field(..., max_length=32)
+    secondary_last: str = Field(..., max_length=32)
+    secondary_email: str = Field(..., max_length=64)
+
+    region: str = Field(..., max_length=5)
+    always_on: bool = Field(default=False)
+    project_name: str = Field(..., max_length=32)
+    lease_time: str = Field(..., max_length=2)
+    description: str = Field(...)
+    notes: str = Field(...)
+    start_date: datetime
+    end_date: datetime
+    hold: bool = Field(default=False)
 
 
-class ClusterUpdateRequest(BaseModel):
-    """Request model for updating cluster information."""
-    
-    status: Optional[str] = Field(None, max_length=50)
-    owner_id: Optional[int] = None
-    hibernation_enabled: Optional[bool] = None
-    metadata: Optional[dict] = None
+class LabUpdateRequest(BaseModel):
+    """Request model for updating lab information."""
+
+    state: Optional[str] = Field(None, max_length=12)
+    cluster_name: Optional[str] = Field(None, max_length=32)
+    company_id: Optional[int] = None
+    always_on: Optional[bool] = None
+    hold: Optional[bool] = None
+    end_date: Optional[datetime] = None
+    notes: Optional[str] = None
 
 
-class UserCreateRequest(BaseModel):
-    """Request model for creating a new user."""
-    
-    username: str = Field(..., max_length=255)
-    email: str = Field(..., max_length=255)
-    red_hat_uuid: Optional[str] = Field(None, max_length=255)
+class CompanyCreateRequest(BaseModel):
+    """Request model for creating a new company."""
+
+    company_name: str = Field(..., max_length=64)
+    curated: bool = Field(default=False)
 
 
-class ClusterListResponse(BaseModel):
-    """Response model for listing clusters."""
-    
-    clusters: List[Cluster]
+class LabListResponse(BaseModel):
+    """Response model for listing labs."""
+
+    labs: List[Lab]
     total_count: int
     page: int
     page_size: int
 
 
-class UserListResponse(BaseModel):
-    """Response model for listing users."""
-    
-    users: List[User]
+class CompanyListResponse(BaseModel):
+    """Response model for listing companies."""
+
+    companies: List[Company]
     total_count: int
     page: int
     page_size: int
 
 
-class ClusterEventListResponse(BaseModel):
-    """Response model for listing cluster events."""
-    
-    events: List[ClusterEvent]
+class LabEventListResponse(BaseModel):
+    """Response model for listing lab events."""
+
+    events: List[LabEvent]
     total_count: int
     page: int
     page_size: int

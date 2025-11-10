@@ -1,6 +1,7 @@
 """Database service layer for OpenShift Partner Labs MCP Server."""
 
 import asyncio
+import uuid
 from datetime import datetime
 from typing import List, Optional, Tuple
 
@@ -8,14 +9,13 @@ import asyncpg
 from asyncpg import Pool
 
 from openshift_partner_labs_mcp_server.src.database.models import (
-    Cluster,
-    ClusterCreateRequest,
-    ClusterEvent,
-    ClusterEventType,
-    ClusterStatus,
-    ClusterUpdateRequest,
-    User,
-    UserCreateRequest,
+    Company,
+    CompanyCreateRequest,
+    Lab,
+    LabCreateRequest,
+    LabEvent,
+    LabState,
+    LabUpdateRequest,
 )
 from openshift_partner_labs_mcp_server.src.settings import settings
 from openshift_partner_labs_mcp_server.utils.pylogger import get_python_logger
@@ -24,12 +24,12 @@ logger = get_python_logger()
 
 
 class DatabaseService:
-    """Database service for managing users, clusters, and events."""
-    
+    """Database service for managing companies, labs, and events."""
+
     def __init__(self):
         """Initialize database service."""
         self._pool: Optional[Pool] = None
-    
+
     async def initialize(self) -> None:
         """Initialize database connection pool."""
         try:
@@ -41,374 +41,440 @@ class DatabaseService:
                 settings.POSTGRES_PASSWORD
             ]):
                 raise ValueError("Missing required PostgreSQL configuration")
-            
+
             dsn = (
                 f"postgresql://{settings.POSTGRES_USER}:{settings.POSTGRES_PASSWORD}"
                 f"@{settings.POSTGRES_HOST}:{settings.POSTGRES_PORT}/{settings.POSTGRES_DB}"
             )
-            
+
             self._pool = await asyncpg.create_pool(
                 dsn,
                 min_size=settings.POSTGRES_POOL_SIZE,
                 max_size=settings.POSTGRES_MAX_CONNECTIONS,
                 command_timeout=60,
             )
-            
+
             logger.info("Database connection pool initialized successfully")
-            
+
         except Exception as e:
             logger.error(f"Failed to initialize database connection pool: {e}")
             raise
-    
+
     async def close(self) -> None:
         """Close database connection pool."""
         if self._pool:
             await self._pool.close()
             logger.info("Database connection pool closed")
-    
+
     async def get_pool(self) -> Pool:
         """Get database connection pool."""
         if not self._pool:
             await self.initialize()
         return self._pool
-    
-    # User operations
-    
-    async def create_user(self, user_request: UserCreateRequest) -> User:
-        """Create a new user."""
+
+    # Company operations
+
+    async def create_company(self, company_request: CompanyCreateRequest) -> Company:
+        """Create a new company."""
         pool = await self.get_pool()
-        
+
         query = """
-            INSERT INTO users (username, email, red_hat_uuid, created_at, updated_at)
-            VALUES ($1, $2, $3, $4, $5)
-            RETURNING id, username, email, red_hat_uuid, created_at, updated_at
+            INSERT INTO companies (company_name, curated, created_at, updated_at)
+            VALUES ($1, $2, $3, $4)
+            RETURNING id, company_name, curated, created_at, updated_at
         """
-        
+
         now = datetime.utcnow()
-        
+
         async with pool.acquire() as conn:
             row = await conn.fetchrow(
                 query,
-                user_request.username,
-                user_request.email,
-                user_request.red_hat_uuid,
+                company_request.company_name,
+                company_request.curated,
                 now,
                 now
             )
-            
-            return User(**dict(row))
-    
-    async def get_user_by_id(self, user_id: int) -> Optional[User]:
-        """Get user by ID."""
+
+            return Company(**dict(row))
+
+    async def get_company_by_id(self, company_id: int) -> Optional[Company]:
+        """Get company by ID."""
         pool = await self.get_pool()
-        
-        query = "SELECT * FROM users WHERE id = $1"
-        
+
+        query = "SELECT * FROM companies WHERE id = $1"
+
         async with pool.acquire() as conn:
-            row = await conn.fetchrow(query, user_id)
-            
+            row = await conn.fetchrow(query, company_id)
+
             if row:
-                return User(**dict(row))
+                return Company(**dict(row))
             return None
-    
-    async def get_user_by_username(self, username: str) -> Optional[User]:
-        """Get user by username."""
+
+    async def get_company_by_name(self, company_name: str) -> Optional[Company]:
+        """Get company by name."""
         pool = await self.get_pool()
-        
-        query = "SELECT * FROM users WHERE username = $1"
-        
+
+        query = "SELECT * FROM companies WHERE company_name = $1"
+
         async with pool.acquire() as conn:
-            row = await conn.fetchrow(query, username)
-            
+            row = await conn.fetchrow(query, company_name)
+
             if row:
-                return User(**dict(row))
+                return Company(**dict(row))
             return None
-    
-    async def list_users(self, page: int = 1, page_size: int = 20) -> Tuple[List[User], int]:
-        """List users with pagination."""
+
+    async def list_companies(self, page: int = 1, page_size: int = 20, curated_only: bool = False) -> Tuple[List[Company], int]:
+        """List companies with pagination."""
         pool = await self.get_pool()
-        
+
         offset = (page - 1) * page_size
-        
-        count_query = "SELECT COUNT(*) FROM users"
-        data_query = "SELECT * FROM users ORDER BY created_at DESC LIMIT $1 OFFSET $2"
-        
+
+        where_clause = ""
+        params = []
+
+        if curated_only:
+            where_clause = "WHERE curated = true"
+
+        count_query = f"SELECT COUNT(*) FROM companies {where_clause}"
+        data_query = f"""
+            SELECT * FROM companies
+            {where_clause}
+            ORDER BY company_name
+            LIMIT ${len(params) + 1} OFFSET ${len(params) + 2}
+        """
+
+        params.extend([page_size, offset])
+
         async with pool.acquire() as conn:
             total_count = await conn.fetchval(count_query)
-            rows = await conn.fetch(data_query, page_size, offset)
-            
-            users = [User(**dict(row)) for row in rows]
-            return users, total_count
-    
-    # Cluster operations
-    
-    async def create_cluster(self, cluster_request: ClusterCreateRequest, owner_id: int) -> Cluster:
-        """Create a new cluster."""
+            rows = await conn.fetch(data_query, *params)
+
+            companies = [Company(**dict(row)) for row in rows]
+            return companies, total_count
+
+    # Lab operations
+
+    async def create_lab(self, lab_request: LabCreateRequest) -> Lab:
+        """Create a new lab."""
         pool = await self.get_pool()
-        
+
+        # Generate UUID for cluster_id
+        cluster_uuid = str(uuid.uuid4())
+
         query = """
-            INSERT INTO clusters (name, namespace, owner_id, status, cluster_type, provider, region,
-                                hibernation_enabled, created_at, updated_at)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-            RETURNING id, name, namespace, owner_id, status, cluster_type, provider, region,
-                     acm_managed_cluster_name, hibernation_enabled, created_at, updated_at, deleted_at
+            INSERT INTO labs (cluster_id, generated_name, state, cluster_name, openshift_version,
+                            cluster_size, company_id, request_type, partner, sponsor, cloud_provider,
+                            primary_first, primary_last, primary_email, secondary_first, secondary_last,
+                            secondary_email, region, always_on, project_name, lease_time, description,
+                            notes, start_date, end_date, hold, created_at, updated_at)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17,
+                   $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28)
+            RETURNING id, cluster_id, generated_name, state, cluster_name, openshift_version,
+                     cluster_size, company_id, request_type, partner, sponsor, cloud_provider,
+                     primary_first, primary_last, primary_email, secondary_first, secondary_last,
+                     secondary_email, region, always_on, project_name, lease_time, description,
+                     notes, start_date, end_date, hold, created_at, updated_at
         """
-        
+
         now = datetime.utcnow()
-        
+
         async with pool.acquire() as conn:
             async with conn.transaction():
                 row = await conn.fetchrow(
                     query,
-                    cluster_request.name,
-                    cluster_request.namespace,
-                    owner_id,
-                    ClusterStatus.PENDING,
-                    cluster_request.cluster_type,
-                    cluster_request.provider,
-                    cluster_request.region,
-                    cluster_request.hibernation_enabled,
+                    cluster_uuid,
+                    lab_request.generated_name,
+                    LabState.PENDING,
+                    lab_request.cluster_name,
+                    lab_request.openshift_version,
+                    lab_request.cluster_size,
+                    lab_request.company_id,
+                    lab_request.request_type,
+                    lab_request.partner,
+                    lab_request.sponsor,
+                    lab_request.cloud_provider,
+                    lab_request.primary_first,
+                    lab_request.primary_last,
+                    lab_request.primary_email,
+                    lab_request.secondary_first,
+                    lab_request.secondary_last,
+                    lab_request.secondary_email,
+                    lab_request.region,
+                    lab_request.always_on,
+                    lab_request.project_name,
+                    lab_request.lease_time,
+                    lab_request.description,
+                    lab_request.notes,
+                    lab_request.start_date,
+                    lab_request.end_date,
+                    lab_request.hold,
                     now,
                     now
                 )
-                
-                cluster = Cluster(**dict(row))
-                
-                # Create cluster creation event
-                await self._create_cluster_event(
+
+                lab = Lab(**dict(row))
+
+                # Create lab creation event
+                await self._create_lab_event(
                     conn,
-                    cluster.id,
-                    ClusterEventType.CREATED,
-                    f"Cluster {cluster.name} created",
-                    cluster_request.metadata
+                    lab.id,
+                    "created",
+                    f"Lab {lab.generated_name} created"
                 )
-                
-                return cluster
-    
-    async def get_cluster_by_id(self, cluster_id: int) -> Optional[Cluster]:
-        """Get cluster by ID."""
+
+                return lab
+
+    async def get_lab_by_id(self, lab_id: int) -> Optional[Lab]:
+        """Get lab by ID."""
         pool = await self.get_pool()
-        
-        query = "SELECT * FROM clusters WHERE id = $1 AND deleted_at IS NULL"
-        
+
+        query = "SELECT * FROM labs WHERE id = $1"
+
+        async with pool.acquire() as conn:
+            row = await conn.fetchrow(query, lab_id)
+
+            if row:
+                return Lab(**dict(row))
+            return None
+
+    async def get_lab_by_name(self, generated_name: str) -> Optional[Lab]:
+        """Get lab by generated name."""
+        pool = await self.get_pool()
+
+        query = "SELECT * FROM labs WHERE generated_name = $1"
+
+        async with pool.acquire() as conn:
+            row = await conn.fetchrow(query, generated_name)
+
+            if row:
+                return Lab(**dict(row))
+            return None
+
+    async def get_lab_by_cluster_id(self, cluster_id: str) -> Optional[Lab]:
+        """Get lab by cluster UUID."""
+        pool = await self.get_pool()
+
+        query = "SELECT * FROM labs WHERE cluster_id = $1"
+
         async with pool.acquire() as conn:
             row = await conn.fetchrow(query, cluster_id)
-            
+
             if row:
-                return Cluster(**dict(row))
+                return Lab(**dict(row))
             return None
-    
-    async def get_cluster_by_name(self, name: str) -> Optional[Cluster]:
-        """Get cluster by name."""
+
+    async def update_lab(self, lab_id: int, update_request: LabUpdateRequest) -> Optional[Lab]:
+        """Update lab information."""
         pool = await self.get_pool()
-        
-        query = "SELECT * FROM clusters WHERE name = $1 AND deleted_at IS NULL"
-        
-        async with pool.acquire() as conn:
-            row = await conn.fetchrow(query, name)
-            
-            if row:
-                return Cluster(**dict(row))
-            return None
-    
-    async def update_cluster(self, cluster_id: int, update_request: ClusterUpdateRequest) -> Optional[Cluster]:
-        """Update cluster information."""
-        pool = await self.get_pool()
-        
+
         # Build dynamic update query
         set_clauses = ["updated_at = $1"]
         params = [datetime.utcnow()]
         param_index = 2
-        
-        if update_request.status is not None:
-            set_clauses.append(f"status = ${param_index}")
-            params.append(update_request.status)
+
+        if update_request.state is not None:
+            set_clauses.append(f"state = ${param_index}")
+            params.append(update_request.state)
             param_index += 1
-        
-        if update_request.owner_id is not None:
-            set_clauses.append(f"owner_id = ${param_index}")
-            params.append(update_request.owner_id)
+
+        if update_request.cluster_name is not None:
+            set_clauses.append(f"cluster_name = ${param_index}")
+            params.append(update_request.cluster_name)
             param_index += 1
-        
-        if update_request.hibernation_enabled is not None:
-            set_clauses.append(f"hibernation_enabled = ${param_index}")
-            params.append(update_request.hibernation_enabled)
+
+        if update_request.company_id is not None:
+            set_clauses.append(f"company_id = ${param_index}")
+            params.append(update_request.company_id)
             param_index += 1
-        
+
+        if update_request.always_on is not None:
+            set_clauses.append(f"always_on = ${param_index}")
+            params.append(update_request.always_on)
+            param_index += 1
+
+        if update_request.hold is not None:
+            set_clauses.append(f"hold = ${param_index}")
+            params.append(update_request.hold)
+            param_index += 1
+
+        if update_request.end_date is not None:
+            set_clauses.append(f"end_date = ${param_index}")
+            params.append(update_request.end_date)
+            param_index += 1
+
+        if update_request.notes is not None:
+            set_clauses.append(f"notes = ${param_index}")
+            params.append(update_request.notes)
+            param_index += 1
+
         query = f"""
-            UPDATE clusters
+            UPDATE labs
             SET {', '.join(set_clauses)}
-            WHERE id = ${param_index} AND deleted_at IS NULL
-            RETURNING id, name, namespace, owner_id, status, cluster_type, provider, region,
-                     acm_managed_cluster_name, hibernation_enabled, created_at, updated_at, deleted_at
+            WHERE id = ${param_index}
+            RETURNING id, cluster_id, generated_name, state, cluster_name, openshift_version,
+                     cluster_size, company_id, request_type, partner, sponsor, cloud_provider,
+                     primary_first, primary_last, primary_email, secondary_first, secondary_last,
+                     secondary_email, region, always_on, project_name, lease_time, description,
+                     notes, start_date, end_date, hold, created_at, updated_at
         """
-        params.append(cluster_id)
-        
+        params.append(lab_id)
+
         async with pool.acquire() as conn:
             async with conn.transaction():
                 row = await conn.fetchrow(query, *params)
-                
+
                 if row:
-                    cluster = Cluster(**dict(row))
-                    
-                    # Create status change event if status was updated
-                    if update_request.status:
-                        await self._create_cluster_event(
+                    lab = Lab(**dict(row))
+
+                    # Create state change event if state was updated
+                    if update_request.state:
+                        await self._create_lab_event(
                             conn,
-                            cluster_id,
-                            ClusterEventType.STATUS_CHANGED,
-                            f"Cluster status changed to {update_request.status}",
-                            update_request.metadata
+                            lab_id,
+                            "state_changed",
+                            f"Lab state changed to {update_request.state}"
                         )
-                    
-                    # Create ownership transfer event if owner was updated
-                    if update_request.owner_id:
-                        await self._create_cluster_event(
-                            conn,
-                            cluster_id,
-                            ClusterEventType.OWNERSHIP_TRANSFERRED,
-                            f"Cluster ownership transferred to user {update_request.owner_id}",
-                            update_request.metadata
-                        )
-                    
-                    return cluster
-                
+
+                    return lab
+
                 return None
-    
-    async def list_clusters(self, owner_id: Optional[int] = None, status: Optional[str] = None,
-                          page: int = 1, page_size: int = 20) -> Tuple[List[Cluster], int]:
-        """List clusters with optional filtering and pagination."""
+
+    async def list_labs(self,
+                       state: Optional[str] = None,
+                       request_type: Optional[str] = None,
+                       cloud_provider: Optional[str] = None,
+                       region: Optional[str] = None,
+                       partner_only: bool = False,
+                       company_id: Optional[int] = None,
+                       page: int = 1,
+                       page_size: int = 20) -> Tuple[List[Lab], int]:
+        """List labs with optional filtering and pagination."""
         pool = await self.get_pool()
-        
-        where_clauses = ["deleted_at IS NULL"]
+
+        where_clauses = []
         params = []
         param_index = 1
-        
-        if owner_id is not None:
-            where_clauses.append(f"owner_id = ${param_index}")
-            params.append(owner_id)
+
+        if state is not None:
+            where_clauses.append(f"state = ${param_index}")
+            params.append(state)
             param_index += 1
-        
-        if status is not None:
-            where_clauses.append(f"status = ${param_index}")
-            params.append(status)
+
+        if request_type is not None:
+            where_clauses.append(f"request_type = ${param_index}")
+            params.append(request_type)
             param_index += 1
-        
-        where_clause = " AND ".join(where_clauses)
+
+        if cloud_provider is not None:
+            where_clauses.append(f"cloud_provider = ${param_index}")
+            params.append(cloud_provider)
+            param_index += 1
+
+        if region is not None:
+            where_clauses.append(f"region = ${param_index}")
+            params.append(region)
+            param_index += 1
+
+        if partner_only:
+            where_clauses.append(f"partner = ${param_index}")
+            params.append(True)
+            param_index += 1
+
+        if company_id is not None:
+            where_clauses.append(f"company_id = ${param_index}")
+            params.append(company_id)
+            param_index += 1
+
+        where_clause = ""
+        if where_clauses:
+            where_clause = "WHERE " + " AND ".join(where_clauses)
+
         offset = (page - 1) * page_size
-        
-        count_query = f"SELECT COUNT(*) FROM clusters WHERE {where_clause}"
+
+        count_query = f"SELECT COUNT(*) FROM labs {where_clause}"
         data_query = f"""
-            SELECT * FROM clusters
-            WHERE {where_clause}
+            SELECT * FROM labs
+            {where_clause}
             ORDER BY created_at DESC
             LIMIT ${param_index} OFFSET ${param_index + 1}
         """
-        
+
         params.extend([page_size, offset])
-        
+
         async with pool.acquire() as conn:
             total_count = await conn.fetchval(count_query, *params[:-2])
             rows = await conn.fetch(data_query, *params)
-            
-            clusters = [Cluster(**dict(row)) for row in rows]
-            return clusters, total_count
-    
-    async def soft_delete_cluster(self, cluster_id: int) -> bool:
-        """Soft delete a cluster."""
-        pool = await self.get_pool()
-        
+
+            labs = [Lab(**dict(row)) for row in rows]
+            return labs, total_count
+
+    # Lab events operations
+
+    async def _create_lab_event(self, conn, lab_id: int, event_type: str,
+                               description: str, metadata: Optional[dict] = None) -> LabEvent:
+        """Create a lab event (internal method)."""
         query = """
-            UPDATE clusters
-            SET deleted_at = $1, updated_at = $1, status = $2
-            WHERE id = $3 AND deleted_at IS NULL
-            RETURNING id
-        """
-        
-        now = datetime.utcnow()
-        
-        async with pool.acquire() as conn:
-            async with conn.transaction():
-                row = await conn.fetchrow(query, now, ClusterStatus.DELETED, cluster_id)
-                
-                if row:
-                    await self._create_cluster_event(
-                        conn,
-                        cluster_id,
-                        ClusterEventType.DELETED,
-                        f"Cluster {cluster_id} deleted"
-                    )
-                    return True
-                
-                return False
-    
-    # Cluster events operations
-    
-    async def _create_cluster_event(self, conn, cluster_id: int, event_type: str,
-                                  description: str, metadata: Optional[dict] = None) -> ClusterEvent:
-        """Create a cluster event (internal method)."""
-        query = """
-            INSERT INTO cluster_events (cluster_id, event_type, description, metadata, created_at)
+            INSERT INTO lab_events (lab_id, event_type, description, metadata, created_at)
             VALUES ($1, $2, $3, $4, $5)
-            RETURNING id, cluster_id, event_type, description, metadata, created_at
+            RETURNING id, lab_id, event_type, description, metadata, created_at
         """
-        
+
         now = datetime.utcnow()
-        
+
         row = await conn.fetchrow(
             query,
-            cluster_id,
+            lab_id,
             event_type,
             description,
             metadata,
             now
         )
-        
-        return ClusterEvent(**dict(row))
-    
-    async def create_cluster_event(self, cluster_id: int, event_type: str,
-                                 description: str, metadata: Optional[dict] = None) -> ClusterEvent:
-        """Create a cluster event."""
+
+        return LabEvent(**dict(row))
+
+    async def create_lab_event(self, lab_id: int, event_type: str,
+                              description: str, metadata: Optional[dict] = None) -> LabEvent:
+        """Create a lab event."""
         pool = await self.get_pool()
-        
+
         async with pool.acquire() as conn:
-            return await self._create_cluster_event(conn, cluster_id, event_type, description, metadata)
-    
-    async def list_cluster_events(self, cluster_id: Optional[int] = None,
-                                page: int = 1, page_size: int = 50) -> Tuple[List[ClusterEvent], int]:
-        """List cluster events with optional filtering and pagination."""
+            return await self._create_lab_event(conn, lab_id, event_type, description, metadata)
+
+    async def list_lab_events(self, lab_id: Optional[int] = None,
+                             page: int = 1, page_size: int = 50) -> Tuple[List[LabEvent], int]:
+        """List lab events with optional filtering and pagination."""
         pool = await self.get_pool()
-        
+
         where_clause = ""
         params = []
         param_index = 1
-        
-        if cluster_id is not None:
-            where_clause = f"WHERE cluster_id = ${param_index}"
-            params.append(cluster_id)
+
+        if lab_id is not None:
+            where_clause = f"WHERE lab_id = ${param_index}"
+            params.append(lab_id)
             param_index += 1
-        
+
         offset = (page - 1) * page_size
-        
-        count_query = f"SELECT COUNT(*) FROM cluster_events {where_clause}"
+
+        count_query = f"SELECT COUNT(*) FROM lab_events {where_clause}"
         data_query = f"""
-            SELECT * FROM cluster_events
+            SELECT * FROM lab_events
             {where_clause}
             ORDER BY created_at DESC
             LIMIT ${param_index} OFFSET ${param_index + 1}
         """
-        
+
         params.extend([page_size, offset])
-        
+
         async with pool.acquire() as conn:
-            if cluster_id is not None:
-                total_count = await conn.fetchval(count_query, cluster_id)
+            if lab_id is not None:
+                total_count = await conn.fetchval(count_query, lab_id)
                 rows = await conn.fetch(data_query, *params)
             else:
                 total_count = await conn.fetchval(count_query)
                 rows = await conn.fetch(data_query, page_size, offset)
-            
-            events = [ClusterEvent(**dict(row)) for row in rows]
+
+            events = [LabEvent(**dict(row)) for row in rows]
             return events, total_count
 
 

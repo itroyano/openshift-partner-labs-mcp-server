@@ -1,7 +1,7 @@
-"""This module sets up the FastAPI application for the Template MCP server.
+"""This module sets up the FastAPI application for the OpenShift Partner Labs MCP server.
 
 It initializes the FastAPI app, configures CORS middleware, and sets up
-the MCP server with appropriate transport protocols.
+the MCP server with appropriate transport protocols for partner lab management.
 """
 
 import webbrowser
@@ -41,7 +41,7 @@ else:  # Default to standard HTTP (works for both "http" and "streamable-http")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
-    """Combined lifespan handler for MCP and storage initialization."""
+    """Combined lifespan handler for MCP, storage, database, and ACM services initialization."""
     global oauth_service_instance
 
     # Initialize storage service before starting
@@ -61,19 +61,37 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         logger.critical(f"Failed to initialize storage service: {e}")
         raise
 
+    # Initialize database and ACM services
+    logger.info("Initializing OpenShift Partner Labs services...")
+    try:
+        await server.initialize_services()
+        logger.info("Partner Labs services initialized successfully")
+    except Exception as e:
+        logger.critical(f"Failed to initialize Partner Labs services: {e}")
+        raise
+
     # Run MCP lifespan
     async with mcp_app.lifespan(app):
         logger.info("Server is ready to accept connections")
         yield
 
+    # Cleanup services
+    logger.info("Shutting down Partner Labs services...")
+    try:
+        await server.cleanup()
+        logger.info("Partner Labs services shutdown complete")
+    except Exception as e:
+        logger.error(f"Error during Partner Labs services cleanup: {e}")
+
     # Cleanup storage service
     logger.info("Shutting down storage service...")
     try:
-        from openshift_partner_labs_mcp_server.src.oauth.service import cleanup_storage
+        if settings.ENABLE_AUTH:
+            from openshift_partner_labs_mcp_server.src.oauth.service import cleanup_storage
 
-        await cleanup_storage()
-        oauth_service_instance = None
-        logger.info("Storage service shutdown complete")
+            await cleanup_storage()
+            oauth_service_instance = None
+            logger.info("Storage service shutdown complete")
     except Exception as e:
         logger.error(f"Error during storage cleanup: {e}")
 
@@ -260,12 +278,12 @@ app.add_middleware(
 
 @app.get("/health")
 async def health_check():
-    """Health check endpoint for the MCP server."""
+    """Health check endpoint for the OpenShift Partner Labs MCP server."""
     return JSONResponse(
         status_code=200,
         content={
             "status": "healthy",
-            "service": "template-mcp-server",
+            "service": "openshift-partner-labs-mcp-server",
             "transport_protocol": settings.MCP_TRANSPORT_PROTOCOL,
             "version": "0.1.0",
         },
