@@ -49,9 +49,9 @@ async def create_lab(
     end_date: str,
     sponsor: Optional[str] = None,
     company_name: Optional[str] = None,
-    partner: bool = False,
-    always_on: bool = False,
-    hold: bool = False,
+    partner: int = 0,
+    always_on: int = 0,
+    hold: int = 0,
 ) -> Dict[str, str]:
     """Create a new OpenShift Partner Lab.
 
@@ -77,9 +77,9 @@ async def create_lab(
         end_date: Lab end date (YYYY-MM-DD HH:MM:SS)
         sponsor: Sponsor email (defaults to primary_email)
         company_name: Company name (optional)
-        partner: Is this a partner lab
-        always_on: Keep cluster always running
-        hold: Put lab on hold
+        partner: Is this a partner lab (0=no, 1=yes)
+        always_on: Keep cluster always running (0=no, 1=yes)
+        hold: Put lab on hold (0=no, 1=yes)
 
     Returns:
         Dictionary with operation result and lab information
@@ -127,7 +127,7 @@ async def create_lab(
                 # Create new company
                 company_request = CompanyCreateRequest(
                     company_name=company_name,
-                    curated=False
+                    curated=0
                 )
                 company = await db_service.create_company(company_request)
             company_id = company.id
@@ -258,7 +258,7 @@ async def approve_lab(generated_name: str) -> Dict[str, str]:
                 LabUpdateRequest(state=LabState.ACTIVE)
             )
 
-            # Create approval event
+            # Create approval event (with error handling for missing table)
             await db_service.create_lab_event(
                 lab.id,
                 "approved",
@@ -284,7 +284,7 @@ async def approve_lab(generated_name: str) -> Dict[str, str]:
                 LabUpdateRequest(state=LabState.PENDING)
             )
 
-            # Create error event
+            # Create error event (with error handling for missing table)
             await db_service.create_lab_event(
                 lab.id,
                 "error_occurred",
@@ -350,7 +350,7 @@ async def deny_lab(generated_name: str, reason: str = "Not approved") -> Dict[st
             )
         )
 
-        # Create denial event
+        # Create denial event (with error handling for missing table)
         await db_service.create_lab_event(
             lab.id,
             "denied",
@@ -428,7 +428,7 @@ async def complete_lab(generated_name: str) -> Dict[str, str]:
                 LabUpdateRequest(state=LabState.COMPLETED)
             )
 
-            # Create completion event
+            # Create completion event (with error handling for missing table)
             await db_service.create_lab_event(
                 lab.id,
                 "completed",
@@ -446,7 +446,7 @@ async def complete_lab(generated_name: str) -> Dict[str, str]:
                 "state": "completed"
             }
         else:
-            # Create error event but still mark as completed
+            # Create error event but still mark as completed (with error handling for missing table)
             await db_service.create_lab_event(
                 lab.id,
                 "error_occurred",
@@ -537,7 +537,7 @@ async def extend_lab(generated_name: str, new_end_date: str) -> Dict[str, str]:
             )
         )
 
-        # Create extension event
+        # Create extension event (with error handling for missing table)
         await db_service.create_lab_event(
             lab.id,
             "extended",

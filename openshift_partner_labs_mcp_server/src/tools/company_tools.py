@@ -11,13 +11,13 @@ logger = get_python_logger()
 
 async def create_company(
     company_name: str,
-    curated: bool = False
+    curated: int = 0
 ) -> Dict[str, str]:
     """Create a new company in the system.
 
     Args:
         company_name: Name of the company (max 64 chars)
-        curated: Whether this is a curated partner company
+        curated: Whether this is a curated partner company (0=no, 1=yes)
 
     Returns:
         Dictionary with operation result and company information
@@ -256,12 +256,12 @@ async def get_company_labs(
         }
 
 
-async def mark_company_curated(company_name: str, curated: bool = True) -> Dict[str, str]:
+async def mark_company_curated(company_name: str, curated: int = 1) -> Dict[str, str]:
     """Mark a company as curated or remove curated status.
 
     Args:
         company_name: Name of the company
-        curated: Whether to mark as curated (True) or remove curation (False)
+        curated: Whether to mark as curated (1) or remove curation (0)
 
     Returns:
         Dictionary with operation result
@@ -279,7 +279,7 @@ async def mark_company_curated(company_name: str, curated: bool = True) -> Dict[
             }
 
         if company.curated == curated:
-            status = "curated" if curated else "not curated"
+            status = "curated" if curated == 1 else "not curated"
             return {
                 "success": "false",
                 "message": f"Company {company_name} is already {status}",

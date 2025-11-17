@@ -11,7 +11,7 @@ class Company(BaseModel):
 
     id: Optional[int] = None
     company_name: str = Field(..., max_length=64)
-    curated: bool = Field(default=False)
+    curated: int = Field(default=0, description="Curated status (0=no, 1=yes)")
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
 
@@ -85,7 +85,7 @@ class Lab(BaseModel):
     cluster_size: str = Field(..., max_length=7, description="Size of the cluster")
     company_id: Optional[int] = Field(None, description="FK to companies table")
     request_type: str = Field(..., max_length=12, description="Type of lab request")
-    partner: bool = Field(default=False, description="Is this a partner lab")
+    partner: int = Field(default=0, description="Partner status (0=no, 1=yes)")
     sponsor: str = Field(..., max_length=64, description="Sponsor email")
     cloud_provider: str = Field(..., max_length=8, description="Cloud provider")
 
@@ -100,14 +100,14 @@ class Lab(BaseModel):
     secondary_email: str = Field(..., max_length=64, description="Secondary contact email")
 
     region: str = Field(..., max_length=5, description="Deployment region")
-    always_on: bool = Field(default=False, description="Keep cluster always running")
+    always_on: int = Field(default=0, description="Always-on status (0=no, 1=yes)")
     project_name: str = Field(..., max_length=32, description="Project identifier")
     lease_time: str = Field(..., max_length=2, description="Lease duration (1d, 1w, 1m, 2w, 2d)")
     description: str = Field(..., description="Lab description")
     notes: str = Field(..., description="Additional notes")
     start_date: datetime = Field(..., description="Lab start date")
     end_date: datetime = Field(..., description="Lab end date")
-    hold: bool = Field(default=False, description="Put lab on hold")
+    hold: int = Field(default=0, description="Hold status (0=no, 1=yes)")
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
 
@@ -132,7 +132,7 @@ class LabCreateRequest(BaseModel):
     cluster_size: str = Field(..., max_length=7, description="Size of cluster")
     company_id: Optional[int] = Field(None, description="Company ID if applicable")
     request_type: str = Field(..., max_length=12, description="Type of request")
-    partner: bool = Field(default=False, description="Partner lab flag")
+    partner: int = Field(default=0, description="Partner lab flag (0=no, 1=yes)")
     sponsor: str = Field(..., max_length=64, description="Sponsor email")
     cloud_provider: str = Field(..., max_length=8, description="Cloud provider")
 
@@ -145,14 +145,14 @@ class LabCreateRequest(BaseModel):
     secondary_email: str = Field(..., max_length=64)
 
     region: str = Field(..., max_length=5)
-    always_on: bool = Field(default=False)
+    always_on: int = Field(default=0, description="Always-on flag (0=no, 1=yes)")
     project_name: str = Field(..., max_length=32)
     lease_time: str = Field(..., max_length=2)
     description: str = Field(...)
     notes: str = Field(...)
     start_date: datetime
     end_date: datetime
-    hold: bool = Field(default=False)
+    hold: int = Field(default=0, description="Hold flag (0=no, 1=yes)")
 
 
 class LabUpdateRequest(BaseModel):
@@ -161,8 +161,8 @@ class LabUpdateRequest(BaseModel):
     state: Optional[str] = Field(None, max_length=12)
     cluster_name: Optional[str] = Field(None, max_length=32)
     company_id: Optional[int] = None
-    always_on: Optional[bool] = None
-    hold: Optional[bool] = None
+    always_on: Optional[int] = None
+    hold: Optional[int] = None
     end_date: Optional[datetime] = None
     notes: Optional[str] = None
 
@@ -171,7 +171,7 @@ class CompanyCreateRequest(BaseModel):
     """Request model for creating a new company."""
 
     company_name: str = Field(..., max_length=64)
-    curated: bool = Field(default=False)
+    curated: int = Field(default=0, description="Curated status (0=no, 1=yes)")
 
 
 class LabListResponse(BaseModel):

@@ -133,7 +133,7 @@ class DatabaseService:
         params = []
 
         if curated_only:
-            where_clause = "WHERE curated = true"
+            where_clause = "WHERE curated = 1"
 
         count_query = f"SELECT COUNT(*) FROM companies {where_clause}"
         data_query = f"""
@@ -214,7 +214,7 @@ class DatabaseService:
 
                 lab = Lab(**dict(row))
 
-                # Create lab creation event
+                # Create lab creation event (with error handling)
                 await self._create_lab_event(
                     conn,
                     lab.id,
@@ -326,7 +326,7 @@ class DatabaseService:
                 if row:
                     lab = Lab(**dict(row))
 
-                    # Create state change event if state was updated
+                    # Create state change event if state was updated (with error handling)
                     if update_request.state:
                         await self._create_lab_event(
                             conn,
@@ -377,7 +377,7 @@ class DatabaseService:
 
         if partner_only:
             where_clauses.append(f"partner = ${param_index}")
-            params.append(True)
+            params.append(1)
             param_index += 1
 
         if company_id is not None:
@@ -411,71 +411,85 @@ class DatabaseService:
     # Lab events operations
 
     async def _create_lab_event(self, conn, lab_id: int, event_type: str,
-                               description: str, metadata: Optional[dict] = None) -> LabEvent:
-        """Create a lab event (internal method)."""
-        query = """
-            INSERT INTO lab_events (lab_id, event_type, description, metadata, created_at)
-            VALUES ($1, $2, $3, $4, $5)
-            RETURNING id, lab_id, event_type, description, metadata, created_at
-        """
+                               description: str, metadata: Optional[dict] = None) -> Optional[LabEvent]:
+        """Create a lab event (internal method) with error handling."""
+        try:
+            query = """
+                INSERT INTO lab_events (lab_id, event_type, description, metadata, created_at)
+                VALUES ($1, $2, $3, $4, $5)
+                RETURNING id, lab_id, event_type, description, metadata, created_at
+            """
 
-        now = datetime.utcnow()
+            now = datetime.utcnow()
 
-        row = await conn.fetchrow(
-            query,
-            lab_id,
-            event_type,
-            description,
-            metadata,
-            now
-        )
+            row = await conn.fetchrow(
+                query,
+                lab_id,
+                event_type,
+                description,
+                metadata,
+                now
+            )
 
-        return LabEvent(**dict(row))
+            return LabEvent(**dict(row))
+
+        except Exception as e:
+            logger.warning(f"Failed to create lab event (table may not exist): {str(e)}")
+            return None
 
     async def create_lab_event(self, lab_id: int, event_type: str,
-                              description: str, metadata: Optional[dict] = None) -> LabEvent:
-        """Create a lab event."""
+                              description: str, metadata: Optional[dict] = None) -> Optional[LabEvent]:
+        """Create a lab event with error handling."""
         pool = await self.get_pool()
 
-        async with pool.acquire() as conn:
-            return await self._create_lab_event(conn, lab_id, event_type, description, metadata)
+        try:
+            async with pool.acquire() as conn:
+                return await self._create_lab_event(conn, lab_id, event_type, description, metadata)
+        except Exception as e:
+            logger.warning(f"Failed to create lab event: {str(e)}")
+            return None
 
     async def list_lab_events(self, lab_id: Optional[int] = None,
                              page: int = 1, page_size: int = 50) -> Tuple[List[LabEvent], int]:
         """List lab events with optional filtering and pagination."""
         pool = await self.get_pool()
 
-        where_clause = ""
-        params = []
-        param_index = 1
+        try:
+            where_clause = ""
+            params = []
+            param_index = 1
 
-        if lab_id is not None:
-            where_clause = f"WHERE lab_id = ${param_index}"
-            params.append(lab_id)
-            param_index += 1
-
-        offset = (page - 1) * page_size
-
-        count_query = f"SELECT COUNT(*) FROM lab_events {where_clause}"
-        data_query = f"""
-            SELECT * FROM lab_events
-            {where_clause}
-            ORDER BY created_at DESC
-            LIMIT ${param_index} OFFSET ${param_index + 1}
-        """
-
-        params.extend([page_size, offset])
-
-        async with pool.acquire() as conn:
             if lab_id is not None:
-                total_count = await conn.fetchval(count_query, lab_id)
-                rows = await conn.fetch(data_query, *params)
-            else:
-                total_count = await conn.fetchval(count_query)
-                rows = await conn.fetch(data_query, page_size, offset)
+                where_clause = f"WHERE lab_id = ${param_index}"
+                params.append(lab_id)
+                param_index += 1
 
-            events = [LabEvent(**dict(row)) for row in rows]
-            return events, total_count
+            offset = (page - 1) * page_size
+
+            count_query = f"SELECT COUNT(*) FROM lab_events {where_clause}"
+            data_query = f"""
+                SELECT * FROM lab_events
+                {where_clause}
+                ORDER BY created_at DESC
+                LIMIT ${param_index} OFFSET ${param_index + 1}
+            """
+
+            params.extend([page_size, offset])
+
+            async with pool.acquire() as conn:
+                if lab_id is not None:
+                    total_count = await conn.fetchval(count_query, lab_id)
+                    rows = await conn.fetch(data_query, *params)
+                else:
+                    total_count = await conn.fetchval(count_query)
+                    rows = await conn.fetch(data_query, page_size, offset)
+
+                events = [LabEvent(**dict(row)) for row in rows]
+                return events, total_count
+
+        except Exception as e:
+            logger.warning(f"Failed to list lab events (table may not exist): {str(e)}")
+            return [], 0
 
 
 # Global database service instance
