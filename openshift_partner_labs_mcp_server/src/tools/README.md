@@ -80,23 +80,19 @@ self.mcp.tool()(your_tool_function)
 - `get_company_labs` - Retrieve labs associated with specific companies
 - `mark_company_curated` - Manage curated partner status
 
-### **Cluster Operations** (`cluster_tools.py`)
-- `create_cluster` - Create OpenShift clusters via ACM
-- `delete_cluster` - Delete clusters and clean up resources
-- `hibernate_cluster` - Put clusters into hibernation mode
-- `resume_cluster` - Resume hibernated clusters
-- `get_cluster_status` - Get current cluster status from ACM
-
-### **Database Queries** (`database_tools.py`)
-- `query_labs` - Execute custom lab queries with filters
-- `query_companies` - Execute custom company queries
-- `get_lab_stats` - Get lab statistics and summaries
-- `get_company_stats` - Get company statistics and summaries
 
 ### **Utility Tools**
 - `multiply_tool.py` - Basic arithmetic operations for capacity planning
 - `code_review_tool.py` - Generate code review prompts
 - `redhat_logo_tool.py` - Red Hat branding asset retrieval
+
+## 📦 **Archived Tools**
+
+The `archive/` directory contains tools that were developed for an older database schema:
+- `cluster_tools.py` - Direct cluster management (incompatible with current schema)
+- `database_tools.py` - Old user/cluster database queries (incompatible with current schema)
+
+These are preserved for reference but are **not registered** in the MCP server. See `archive/README.md` for details.
 
 ## ✅ **Best Practices**
 
