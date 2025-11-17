@@ -1,6 +1,6 @@
 # OpenShift/Kubernetes Deployment
 
-Production-ready Kubernetes manifests for deploying your MCP server using **Red Hat UBI** containers and rootless security.
+Production-ready Kubernetes manifests for deploying the OpenShift Partner Labs MCP server using **Red Hat UBI** containers and rootless security.
 
 ## 📁 **Deployment Files**
 
@@ -20,7 +20,7 @@ Production-ready Kubernetes manifests for deploying your MCP server using **Red 
 oc apply -k .
 
 # Or deploy to specific namespace
-oc apply -k . -n your-mcp-namespace
+oc apply -k . -n openshift-partner-labs
 ```
 
 ### **Kubernetes:**
@@ -40,24 +40,26 @@ kubectl apply -f service.yaml
 
 1. **`deployment.yaml`** - Image and environment:
    ```yaml
-   image: your-registry/your-domain-mcp-server:latest
+   image: ghcr.io/mrhillsman/openshift-partner-labs-mcp-server:latest
    env:
    - name: MCP_PORT
-     value: "4001"  # Use unique port
+     value: "8443"  # HTTPS port for OpenShift
    ```
 
 2. **`route.yaml`** - External hostname:
    ```yaml
    spec:
-     host: your-domain-mcp-server.apps.cluster.com
+     host: openshift-partner-labs-mcp-server.apps.cluster.com
    ```
 
 3. **`configmap.yaml`** - Application config:
    ```yaml
    data:
      MCP_HOST: "0.0.0.0"
-     MCP_PORT: "4001"
+     MCP_PORT: "8443"
      LOG_LEVEL: "INFO"
+     POSTGRES_HOST: "postgresql-service"
+     POSTGRES_DB: "openshift_partner_labs_app"
    ```
 
 ## 🛡️ **Security Features**
@@ -83,8 +85,11 @@ oc get pods
 oc get routes
 
 # View logs
-oc logs deployment/your-domain-mcp-server
+oc logs deployment/openshift-partner-labs-mcp-server
 
 # Port forward for testing
-oc port-forward svc/your-domain-mcp-server 4001:4001
+oc port-forward svc/openshift-partner-labs-mcp-server 8080:8443
+
+# Test the service
+curl https://openshift-partner-labs-mcp-server.apps.cluster.com/health
 ```

@@ -106,9 +106,9 @@ The system uses a PostgreSQL database with the following core tables:
 
 - **`companies`**: Partner organization information and curation status
 - **`labs`**: Complete lab definitions with contacts, specs, and lifecycle data
-- **`lab_events`**: Audit trail for all lab operations and state changes
+- **`lab_events`** *(optional)*: Audit trail for all lab operations and state changes
 
-The schema includes comprehensive indexing, reporting views, and data integrity constraints.
+The schema includes comprehensive indexing, reporting views, and data integrity constraints. The `lab_events` table is optional - if it doesn't exist, event tracking operations will be gracefully skipped with appropriate logging. To enable full event tracking, uncomment the `lab_events` table creation in the migration script.
 
 ## Prerequisites
 

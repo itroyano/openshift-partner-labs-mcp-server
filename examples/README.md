@@ -1,6 +1,6 @@
 # MCP Client Examples
 
-Ready-to-use client examples for connecting to your MCP server with different frameworks.
+Ready-to-use client examples for connecting to the OpenShift Partner Labs MCP server with different frameworks.
 
 ## 📁 **Client Examples**
 
@@ -37,9 +37,9 @@ python examples/langgraph_client.py
 
 ```python
 # Both files - update these URLs
-server_url = "http://localhost:3000"           # Local development
-# server_url = "http://0.0.0.0:4001"          # Custom port
-# server_url = "https://your-mcp.apps.cluster.com"  # Production OpenShift
+server_url = "http://localhost:8080/mcp"      # Local development
+# server_url = "http://0.0.0.0:8080/mcp"     # Local development (all interfaces)
+# server_url = "https://openshift-partner-labs-mcp-server.apps.cluster.com/mcp"  # Production OpenShift
 ```
 
 ## 📋 **What Each Example Shows**
@@ -58,19 +58,49 @@ server_url = "http://localhost:3000"           # Local development
 - ✅ Complex business logic
 - ✅ Production-ready patterns
 
-## 🎯 **Customization for Your Domain**
+## 🎯 **OpenShift Partner Labs Tools**
 
-**Update the examples with your tools:**
+**Example lab management operations:**
 
 ```python
-# Replace template tool calls with your domain tools
-# Instead of:
-result = await client.call_tool("multiply_numbers", {"a": 5, "b": 3})
+# Create a new lab
+result = await client.call_tool("create_lab", {
+    "generated_name": "partner-lab-demo",
+    "cluster_name": "ocp-partner-demo",
+    "openshift_version": "4.20.0",
+    "cluster_size": "medium",
+    "request_type": "general",
+    "cloud_provider": "AWS",
+    "primary_first": "Jane",
+    "primary_last": "Doe",
+    "primary_email": "jane.doe@partner.com",
+    "secondary_first": "John",
+    "secondary_last": "Smith",
+    "secondary_email": "john.smith@partner.com",
+    "region": "na1",
+    "project_name": "demo-project",
+    "lease_time": "1w",
+    "description": "Partner demonstration lab",
+    "notes": "Initial setup for partner onboarding",
+    "start_date": "2024-12-01 09:00:00",
+    "end_date": "2024-12-08 17:00:00",
+    "company_name": "Acme Corp"
+})
 
-# Use your domain tools:
-result = await client.call_tool("execute_domain_query", {
-    "query_type": "performance_analysis",
-    "parameters": {"quarter": "Q3", "region": "EMEA"}
+# Approve the lab (triggers cluster creation)
+approval = await client.call_tool("approve_lab", {
+    "generated_name": "partner-lab-demo"
+})
+
+# List all labs for a company
+company_labs = await client.call_tool("get_company_labs", {
+    "company_name": "Acme Corp"
+})
+
+# Create a new partner company
+company = await client.call_tool("create_company", {
+    "company_name": "New Partner Inc",
+    "curated": 0  # 0=no, 1=yes
 })
 ```
 
@@ -78,11 +108,16 @@ result = await client.call_tool("execute_domain_query", {
 
 ```bash
 # Test server health first
-curl http://localhost:3000/health
+curl http://localhost:8080/health
 
-# Run client examples to verify tool integration
+# Run client examples to verify lab management integration
 python examples/fastmcp_client.py
 python examples/langgraph_client.py
+
+# Test specific lab management endpoints
+curl http://localhost:8080/mcp -X POST \
+  -H "Content-Type: application/json" \
+  -d '{"method": "list_tools", "params": {}}'
 ```
 
 ## 📚 **Learn More**

@@ -64,9 +64,39 @@ self.mcp.tool()(your_tool_function)
 
 ## 📋 **Current Tools**
 
-- `multiply_tool.py` - Basic arithmetic operations
-- `code_review_tool.py` - Generate code review prompts (converted from prompt)
-- `redhat_logo_tool.py` - Asset retrieval (converted from resource)
+### **Core Lab Management** (`lab_tools.py`)
+- `create_lab` - Create new OpenShift Partner Lab requests
+- `approve_lab` - Approve lab requests and initiate cluster creation via ACM
+- `deny_lab` - Deny lab requests with documented reasoning
+- `complete_lab` - Complete labs and clean up cluster resources
+- `extend_lab` - Extend lab duration beyond original end date
+- `get_lab_status` - Retrieve detailed lab information and status
+- `list_labs` - List labs with comprehensive filtering and pagination
+
+### **Company Management** (`company_tools.py`)
+- `create_company` - Create new partner companies in the system
+- `get_company` - Retrieve company information by name
+- `list_companies` - List companies with pagination and filtering
+- `get_company_labs` - Retrieve labs associated with specific companies
+- `mark_company_curated` - Manage curated partner status
+
+### **Cluster Operations** (`cluster_tools.py`)
+- `create_cluster` - Create OpenShift clusters via ACM
+- `delete_cluster` - Delete clusters and clean up resources
+- `hibernate_cluster` - Put clusters into hibernation mode
+- `resume_cluster` - Resume hibernated clusters
+- `get_cluster_status` - Get current cluster status from ACM
+
+### **Database Queries** (`database_tools.py`)
+- `query_labs` - Execute custom lab queries with filters
+- `query_companies` - Execute custom company queries
+- `get_lab_stats` - Get lab statistics and summaries
+- `get_company_stats` - Get company statistics and summaries
+
+### **Utility Tools**
+- `multiply_tool.py` - Basic arithmetic operations for capacity planning
+- `code_review_tool.py` - Generate code review prompts
+- `redhat_logo_tool.py` - Red Hat branding asset retrieval
 
 ## ✅ **Best Practices**
 
