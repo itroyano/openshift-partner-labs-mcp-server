@@ -4,11 +4,11 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from openshift_partner_labs_mcp_server.src.mcp import TemplateMCPServer
+from openshift_partner_labs_mcp_server.src.mcp import PartnerLabsMCPServer
 
 
-class TestTemplateMCPServer:
-    """Test the TemplateMCPServer class."""
+class TestPartnerLabsMCPServer:
+    """Test the PartnerLabsMCPServer class."""
 
     @patch("openshift_partner_labs_mcp_server.src.mcp.force_reconfigure_all_loggers")
     @patch("openshift_partner_labs_mcp_server.src.mcp.settings")
@@ -17,19 +17,19 @@ class TestTemplateMCPServer:
     def test_init_success(
         self, mock_logger, mock_fastmcp, mock_settings, mock_force_reconfigure
     ):
-        """Test successful initialization of TemplateMCPServer."""
+        """Test successful initialization of PartnerLabsMCPServer."""
         # Arrange
         mock_mcp = Mock()
         mock_fastmcp.return_value = mock_mcp
         mock_settings.PYTHON_LOG_LEVEL = "INFO"
 
         # Act
-        server = TemplateMCPServer()
+        server = PartnerLabsMCPServer()
 
         # Assert
         assert server.mcp == mock_mcp
         mock_logger.info.assert_called_with(
-            "Template MCP Server initialized successfully"
+            "OpenShift Partner Labs MCP Server initialized successfully with hybrid architecture"
         )
         # In tools-first architecture, we only register tools
         mock_mcp.tool.assert_called()
@@ -48,10 +48,10 @@ class TestTemplateMCPServer:
 
         # Act & Assert
         with pytest.raises(Exception, match="Test error"):
-            TemplateMCPServer()
+            PartnerLabsMCPServer()
 
         mock_logger.error.assert_called_with(
-            "Failed to initialize Template MCP Server: Test error"
+            "Failed to initialize OpenShift Partner Labs MCP Server: Test error"
         )
 
     @patch("openshift_partner_labs_mcp_server.src.mcp.force_reconfigure_all_loggers")
@@ -65,7 +65,7 @@ class TestTemplateMCPServer:
         mock_mcp = Mock()
         mock_fastmcp.return_value = mock_mcp
         mock_settings.PYTHON_LOG_LEVEL = "INFO"
-        server = TemplateMCPServer()
+        server = PartnerLabsMCPServer()
 
         # Act
         server._register_mcp_tools()
@@ -84,7 +84,7 @@ class TestTemplateMCPServer:
         mock_mcp = Mock()
         mock_fastmcp.return_value = mock_mcp
         mock_settings.PYTHON_LOG_LEVEL = "INFO"
-        server = TemplateMCPServer()
+        server = PartnerLabsMCPServer()
 
         # Act
         server._register_mcp_tools()
@@ -96,7 +96,7 @@ class TestTemplateMCPServer:
         )  # multiply_numbers, generate_code_review_prompt, get_redhat_logo
 
     def test_server_attributes(self):
-        """Test that server has required attributes for tools-first architecture."""
+        """Test that server has required attributes for hybrid architecture."""
         # Arrange & Act
         with (
             patch(
@@ -108,14 +108,14 @@ class TestTemplateMCPServer:
             ),
         ):
             mock_settings.PYTHON_LOG_LEVEL = "INFO"
-            server = TemplateMCPServer()
+            server = PartnerLabsMCPServer()
 
         # Assert
         assert hasattr(server, "mcp")
         assert hasattr(server, "_register_mcp_tools")
 
-    def test_tools_first_architecture_compliance(self):
-        """Test that server adheres to tools-first architecture by not having resource/prompt methods."""
+    def test_hybrid_architecture_compliance(self):
+        """Test that server adheres to hybrid architecture with both tools and resources."""
         # Arrange & Act
         with (
             patch(
@@ -127,12 +127,18 @@ class TestTemplateMCPServer:
             ),
         ):
             mock_settings.PYTHON_LOG_LEVEL = "INFO"
-            server = TemplateMCPServer()
+            server = PartnerLabsMCPServer()
 
-        # Assert - These methods should NOT exist in tools-first architecture
-        assert not hasattr(server, "_register_mcp_resources"), (
-            "_register_mcp_resources should not exist in tools-first architecture"
+        # Assert - These methods should exist in hybrid architecture
+        assert hasattr(server, "_register_mcp_tools"), (
+            "_register_mcp_tools should exist in hybrid architecture"
         )
-        assert not hasattr(server, "_register_mcp_prompts"), (
-            "_register_mcp_prompts should not exist in tools-first architecture"
+        assert hasattr(server, "_register_mcp_resources"), (
+            "_register_mcp_resources should exist in hybrid architecture"
+        )
+        assert hasattr(server, "_register_mcp_handlers"), (
+            "_register_mcp_handlers should exist in hybrid architecture"
+        )
+        assert hasattr(server, "resource_manager"), (
+            "resource_manager should exist in hybrid architecture"
         )

@@ -1,4 +1,4 @@
-"""Basic tests for the Template MCP Server."""
+"""Basic tests for the Partner Labs MCP Server."""
 
 import importlib
 from unittest.mock import Mock, patch
@@ -103,7 +103,7 @@ class TestServer:
         import openshift_partner_labs_mcp_server.src.mcp as server_mod
 
         importlib.reload(server_mod)
-        self.TemplateMCPServer = server_mod.TemplateMCPServer
+        self.PartnerLabsMCPServer = server_mod.PartnerLabsMCPServer
 
     def test_server_initialization(self):
         """Test that server can be initialized."""
@@ -117,7 +117,7 @@ class TestServer:
             patch("openshift_partner_labs_mcp_server.src.mcp.FastMCP"),
         ):
             mock_settings.PYTHON_LOG_LEVEL = "INFO"
-            server = self.TemplateMCPServer()
+            server = self.PartnerLabsMCPServer()
             assert server is not None
             assert hasattr(server, "mcp")
             assert hasattr(server, "_register_mcp_tools")
@@ -134,7 +134,7 @@ class TestServer:
             patch("openshift_partner_labs_mcp_server.src.mcp.FastMCP"),
         ):
             mock_settings.PYTHON_LOG_LEVEL = "INFO"
-            server = self.TemplateMCPServer()
+            server = self.PartnerLabsMCPServer()
             assert hasattr(server, "_register_mcp_tools")
 
     def test_server_mcp_instance(self):
@@ -149,7 +149,7 @@ class TestServer:
             patch("openshift_partner_labs_mcp_server.src.mcp.FastMCP"),
         ):
             mock_settings.PYTHON_LOG_LEVEL = "INFO"
-            server = self.TemplateMCPServer()
+            server = self.PartnerLabsMCPServer()
             assert server.mcp is not None
             assert hasattr(server.mcp, "tool")
 

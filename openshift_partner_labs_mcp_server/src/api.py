@@ -15,7 +15,7 @@ from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.middleware.sessions import SessionMiddleware
 
-from openshift_partner_labs_mcp_server.src.mcp import TemplateMCPServer
+from openshift_partner_labs_mcp_server.src.mcp import PartnerLabsMCPServer
 from openshift_partner_labs_mcp_server.src.oauth.handler import OAuth2Handler
 from openshift_partner_labs_mcp_server.src.oauth.routes import register_oauth_routes
 from openshift_partner_labs_mcp_server.src.oauth.service import OAuthService
@@ -24,7 +24,7 @@ from openshift_partner_labs_mcp_server.utils.pylogger import get_python_logger
 
 logger = get_python_logger(settings.PYTHON_LOG_LEVEL)
 
-server = TemplateMCPServer()
+server = PartnerLabsMCPServer()
 
 oauth_service_instance: Optional[OAuthService] = None
 
@@ -286,6 +286,18 @@ async def health_check():
             "service": "openshift-partner-labs-mcp-server",
             "transport_protocol": settings.MCP_TRANSPORT_PROTOCOL,
             "version": "0.1.0",
+            "architecture": "hybrid",
+            "capabilities": {
+                "tools": True,
+                "resources": True,
+                "prompts": False
+            },
+            "features": {
+                "lab_management": True,
+                "company_management": True,
+                "asset_serving": True,
+                "configuration_data": True
+            }
         },
     )
 
