@@ -152,7 +152,7 @@ class FastMCPClient:
 async def main():
     """Main function to run the demo."""
     # Test MCP server deployed locally
-    demo = FastMCPClient(server_url="http://0.0.0.0:3000")
+    demo = FastMCPClient(server_url="http://0.0.0.0:8080")
 
     # Test MCP server deployed on openshift
     # demo = FastMCPClient(server_url="https://partner-labs-mcp-server.apps.int.spoke.preprod.us-west-2.aws.paas.redhat.com")

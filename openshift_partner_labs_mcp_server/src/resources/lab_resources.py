@@ -1,5 +1,6 @@
 """Lab resources for MCP server."""
 
+from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
 from openshift_partner_labs_mcp_server.src.database.service import db_service
@@ -233,7 +234,7 @@ class LabResources(JSONResource):
                 "cloud_provider": cloud_provider
             },
             "metadata": {
-                "retrieved_at": "2024-12-02T00:00:00Z",  # TODO: Use actual timestamp
+                "retrieved_at": datetime.now(timezone.utc).isoformat().replace('+00:00', 'Z'),
                 "page_size": page_size,
                 "total_pages": (total_count + page_size - 1) // page_size
             }
@@ -282,7 +283,7 @@ class LabResources(JSONResource):
             "labs": labs_data,
             "total_count": total_count,
             "metadata": {
-                "retrieved_at": "2024-12-02T00:00:00Z"
+                "retrieved_at": datetime.now(timezone.utc).isoformat().replace('+00:00', 'Z')
             }
         }
 
@@ -362,9 +363,9 @@ class LabResources(JSONResource):
             "created_at": lab.created_at.isoformat() if lab.created_at else None,
             "updated_at": lab.updated_at.isoformat() if lab.updated_at else None,
             "duration_days": (lab.end_date - lab.start_date).days,
-            "is_expired": lab.end_date < lab.start_date,  # TODO: Use current time
+            "is_expired": (lab.end_date.replace(tzinfo=timezone.utc) if lab.end_date.tzinfo is None else lab.end_date) < datetime.now(timezone.utc),
             "metadata": {
-                "retrieved_at": "2024-12-02T00:00:00Z"
+                "retrieved_at": datetime.now(timezone.utc).isoformat().replace('+00:00', 'Z')
             }
         }
 
@@ -402,7 +403,7 @@ class LabResources(JSONResource):
                 "events": events_data,
                 "event_count": len(events_data),
                 "metadata": {
-                    "retrieved_at": "2024-12-02T00:00:00Z"
+                    "retrieved_at": datetime.now(timezone.utc).isoformat().replace('+00:00', 'Z')
                 }
             }
 
@@ -414,7 +415,7 @@ class LabResources(JSONResource):
                 "events": [],
                 "event_count": 0,
                 "metadata": {
-                    "retrieved_at": "2024-12-02T00:00:00Z",
+                    "retrieved_at": datetime.now(timezone.utc).isoformat().replace('+00:00', 'Z'),
                     "note": "Event history not available"
                 }
             }

@@ -2,7 +2,7 @@
 
 from typing import Dict, Optional
 
-from openshift_partner_labs_mcp_server.src.database.models import CompanyCreateRequest
+from openshift_partner_labs_mcp_server.src.database.models import CompanyCreateRequest, CompanyUpdateRequest
 from openshift_partner_labs_mcp_server.src.database.service import db_service
 from openshift_partner_labs_mcp_server.utils.pylogger import get_python_logger
 
@@ -153,7 +153,7 @@ async def list_companies(
             "page_size": str(page_size),
             "total_pages": str(total_pages),
             "curated_only": str(curated_only),
-            "companies": str(company_list)  # Convert to string for MCP tool return
+            "companies": company_list  # Return native list structure for MCP protocol
         }
 
     except Exception as e:
@@ -239,7 +239,7 @@ async def get_company_labs(
             "page_size": str(page_size),
             "total_pages": str(total_pages),
             "state_filter": state or "all",
-            "labs": str(lab_list)  # Convert to string for MCP tool return
+            "labs": lab_list  # Return native list structure for MCP protocol
         }
 
     except Exception as e:
@@ -288,19 +288,25 @@ async def mark_company_curated(company_name: str, curated: int = 1) -> Dict[str,
             }
 
         # Update company curation status
-        # Note: We would need to add an update_company method to the database service
-        # For now, we'll return a message indicating this needs to be implemented
+        update_request = CompanyUpdateRequest(curated=curated)
+        updated_company = await db_service.update_company(company.id, update_request)
 
-        # TODO: Implement update_company method in database service
-        logger.warning("Company update functionality not yet implemented in database service")
+        if not updated_company:
+            return {
+                "success": "false",
+                "message": f"Failed to update company {company_name}",
+                "company_name": company_name
+            }
+
+        logger.info(f"Successfully updated company {company_name} curated status to {curated}")
 
         return {
-            "success": "false",
-            "message": f"Company curation update not yet implemented. Please manually update company {company_name}",
+            "success": "true",
+            "message": f"Company {company_name} curation status updated successfully",
+            "company_id": str(updated_company.id),
             "company_name": company_name,
-            "requested_curated": str(curated),
-            "current_curated": str(company.curated),
-            "todo": "Implement update_company method in database service"
+            "curated": str(updated_company.curated),
+            "updated_at": updated_company.updated_at.isoformat() if updated_company.updated_at else ""
         }
 
     except Exception as e:

@@ -68,7 +68,7 @@ DROP TABLE IF EXISTS companies;
 
 -- Companies table
 CREATE TABLE IF NOT EXISTS companies (
-    id           integer PRIMARY KEY,
+    id           SERIAL PRIMARY KEY,
     company_name varchar(64) NOT NULL,
     curated      smallint    NOT NULL,
     created_at   timestamp   NOT NULL,
@@ -77,7 +77,7 @@ CREATE TABLE IF NOT EXISTS companies (
 
 -- Labs table
 CREATE TABLE IF NOT EXISTS labs (
-    id              integer      PRIMARY KEY,
+    id              SERIAL       PRIMARY KEY,
     cluster_id      char(36)     NOT NULL,
     generated_name  varchar(32)  NOT NULL,
     state           varchar(12)  NOT NULL,

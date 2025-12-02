@@ -37,8 +37,8 @@ class ACMClusterInfo(BaseModel):
     nodes: Optional[int] = None
 
 
-class ACMClusterClaim(BaseModel):
-    """ACM cluster claim model."""
+class ACMClusterClaimItem(BaseModel):
+    """ACM cluster claim item model (simple key-value pair)."""
     
     name: str
     value: str
@@ -70,7 +70,7 @@ class ACMManagedClusterStatus(BaseModel):
     
     allocatable: Optional[Dict[str, str]] = None
     capacity: Optional[Dict[str, str]] = None
-    cluster_claims: Optional[List[ACMClusterClaim]] = Field(None, alias="clusterClaims")
+    cluster_claims: Optional[List[ACMClusterClaimItem]] = Field(None, alias="clusterClaims")
     conditions: Optional[List[ACMClusterCondition]] = None
     version: Optional[ACMClusterInfo] = None
 

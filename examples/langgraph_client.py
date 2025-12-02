@@ -153,7 +153,7 @@ async def get_agent_redhat():
     client = MultiServerMCPClient(
         {
             "openshift_partner_labs_mcp_server": {
-                "url": "http://0.0.0.0:3000/mcp/",
+                "url": "http://0.0.0.0:8080/mcp/",
                 "transport": "streamable_http",
             },
         }

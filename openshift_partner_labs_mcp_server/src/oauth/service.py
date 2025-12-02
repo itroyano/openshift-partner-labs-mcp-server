@@ -399,12 +399,14 @@ async def initialize_storage() -> StorageService:
     logger.info("Initializing PostgreSQL storage service")
 
     # Validate required configuration
+    # Check all required fields including PASSWORD to match database/service.py validation
     if not all(
         [
             settings.DATABASE_HOST,
             settings.DATABASE_PORT,
             settings.DATABASE_DB,
             settings.DATABASE_USER,
+            settings.DATABASE_PASSWORD,
         ]
     ):
         missing = [
@@ -414,6 +416,7 @@ async def initialize_storage() -> StorageService:
                 ("DATABASE_PORT", settings.DATABASE_PORT),
                 ("DATABASE_DB", settings.DATABASE_DB),
                 ("DATABASE_USER", settings.DATABASE_USER),
+                ("DATABASE_PASSWORD", settings.DATABASE_PASSWORD),
             ]
             if not value
         ]
@@ -430,7 +433,7 @@ async def initialize_storage() -> StorageService:
         else 5432,
         database=str(settings.DATABASE_DB),
         username=str(settings.DATABASE_USER),
-        password=settings.DATABASE_PASSWORD or "",
+        password=str(settings.DATABASE_PASSWORD),
         pool_size=settings.DATABASE_POOL_SIZE,
         max_connections=settings.DATABASE_MAX_CONNECTIONS,
     )

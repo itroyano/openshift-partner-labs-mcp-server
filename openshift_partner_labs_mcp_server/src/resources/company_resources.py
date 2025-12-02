@@ -1,5 +1,6 @@
 """Company resources for MCP server."""
 
+from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
 from openshift_partner_labs_mcp_server.src.database.service import db_service
@@ -162,7 +163,7 @@ class CompanyResources(JSONResource):
                 "curated_only": curated_only
             },
             "metadata": {
-                "retrieved_at": "2024-12-02T00:00:00Z",
+                "retrieved_at": datetime.now(timezone.utc).isoformat().replace('+00:00', 'Z'),
                 "page_size": page_size,
                 "total_pages": (total_count + page_size - 1) // page_size
             }
@@ -207,7 +208,7 @@ class CompanyResources(JSONResource):
             "companies": companies_with_labs,
             "total_count": len(companies_with_labs),
             "metadata": {
-                "retrieved_at": "2024-12-02T00:00:00Z",
+                "retrieved_at": datetime.now(timezone.utc).isoformat().replace('+00:00', 'Z'),
                 "description": "Companies that have created labs"
             }
         }
@@ -310,7 +311,7 @@ class CompanyResources(JSONResource):
             "labs": labs_data,
             "total_labs": total_count,
             "metadata": {
-                "retrieved_at": "2024-12-02T00:00:00Z"
+                "retrieved_at": datetime.now(timezone.utc).isoformat().replace('+00:00', 'Z')
             }
         }
 
@@ -390,8 +391,8 @@ class CompanyResources(JSONResource):
                 "by_cloud_provider": provider_stats
             },
             "metadata": {
-                "retrieved_at": "2024-12-02T00:00:00Z",
-                "calculation_date": "2024-12-02T00:00:00Z"
+                "retrieved_at": datetime.now(timezone.utc).isoformat().replace('+00:00', 'Z'),
+                "calculation_date": datetime.now(timezone.utc).isoformat().replace('+00:00', 'Z')
             }
         }
 

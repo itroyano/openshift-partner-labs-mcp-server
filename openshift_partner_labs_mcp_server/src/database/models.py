@@ -174,6 +174,12 @@ class CompanyCreateRequest(BaseModel):
     curated: int = Field(default=0, description="Curated status (0=no, 1=yes)")
 
 
+class CompanyUpdateRequest(BaseModel):
+    """Request model for updating company information."""
+
+    curated: Optional[int] = Field(None, description="Curated status (0=no, 1=yes)")
+
+
 class LabListResponse(BaseModel):
     """Response model for listing labs."""
 

@@ -1,6 +1,7 @@
 """Asset resources for MCP server - handles static files and binary assets."""
 
 import base64
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
@@ -320,7 +321,7 @@ class AssetInfoResource(JSONResource):
             "total_assets": len(assets),
             "directory_path": str(assets_dir),
             "metadata": {
-                "retrieved_at": "2024-12-02T00:00:00Z"
+                "retrieved_at": datetime.now(timezone.utc).isoformat().replace('+00:00', 'Z')
             }
         }
 
@@ -362,7 +363,7 @@ class AssetInfoResource(JSONResource):
                 "mime_type": self._get_mime_type(asset_path.name),
                 "uri": f"assets://{asset_name}",
                 "metadata": {
-                    "retrieved_at": "2024-12-02T00:00:00Z"
+                    "retrieved_at": datetime.now(timezone.utc).isoformat().replace('+00:00', 'Z')
                 }
             }
         except Exception as e:

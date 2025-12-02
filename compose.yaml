@@ -3,9 +3,9 @@ services:
     image: postgres:15-alpine
     container_name: template-mcp-postgres
     environment:
-      DATABASE_DB: postgres
-      DATABASE_USER: postgres
-      DATABASE_PASSWORD: postgres
+      POSTGRES_DB: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
     ports:
       - "5432:5432"
     volumes:

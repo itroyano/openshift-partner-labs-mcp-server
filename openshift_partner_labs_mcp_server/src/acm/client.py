@@ -610,10 +610,13 @@ class ACMClient:
                 }
             }
         elif request.cloud_provider.lower() == "gcp":
+            project_id = settings.ACM_GCP_PROJECT_ID
+            if not project_id:
+                raise ValueError("ACM_GCP_PROJECT_ID must be configured for GCP cluster creation")
             return {
                 "gcp": {
                     "region": request.region,
-                    "projectID": "your-gcp-project-id"  # This should be configurable
+                    "projectID": project_id
                 }
             }
         else:
@@ -621,4 +624,5 @@ class ACMClient:
 
 
 # Global ACM client instance
-acm_client = ACMClient()
+# Initialize with kubeconfig path from settings if available
+acm_client = ACMClient(kubeconfig_path=settings.ACM_KUBECONFIG_PATH if hasattr(settings, 'ACM_KUBECONFIG_PATH') else None)

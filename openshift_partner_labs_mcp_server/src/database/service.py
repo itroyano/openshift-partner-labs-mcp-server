@@ -4,6 +4,7 @@ import asyncio
 import uuid
 from datetime import datetime
 from typing import List, Optional, Tuple
+from urllib.parse import quote
 
 import asyncpg
 from asyncpg import Pool
@@ -11,6 +12,7 @@ from asyncpg import Pool
 from openshift_partner_labs_mcp_server.src.database.models import (
     Company,
     CompanyCreateRequest,
+    CompanyUpdateRequest,
     Lab,
     LabCreateRequest,
     LabEvent,
@@ -42,9 +44,15 @@ class DatabaseService:
             ]):
                 raise ValueError("Missing required PostgreSQL configuration")
 
+            # URL-encode username and password to handle special characters
+            encoded_user = quote(str(settings.DATABASE_USER), safe='')
+            encoded_password = quote(str(settings.DATABASE_PASSWORD), safe='')
+            encoded_host = quote(str(settings.DATABASE_HOST), safe='')
+            encoded_db = quote(str(settings.DATABASE_DB), safe='')
+            
             dsn = (
-                f"postgresql://{settings.DATABASE_USER}:{settings.DATABASE_PASSWORD}"
-                f"@{settings.DATABASE_HOST}:{settings.DATABASE_PORT}/{settings.DATABASE_DB}"
+                f"postgresql://{encoded_user}:{encoded_password}"
+                f"@{encoded_host}:{settings.DATABASE_PORT}/{encoded_db}"
             )
 
             self._pool = await asyncpg.create_pool(
@@ -118,6 +126,35 @@ class DatabaseService:
 
         async with pool.acquire() as conn:
             row = await conn.fetchrow(query, company_name)
+
+            if row:
+                return Company(**dict(row))
+            return None
+
+    async def update_company(self, company_id: int, update_request: CompanyUpdateRequest) -> Optional[Company]:
+        """Update company information."""
+        pool = await self.get_pool()
+
+        # Build dynamic update query
+        set_clauses = ["updated_at = $1"]
+        params = [datetime.utcnow()]
+        param_index = 2
+
+        if update_request.curated is not None:
+            set_clauses.append(f"curated = ${param_index}")
+            params.append(update_request.curated)
+            param_index += 1
+
+        query = f"""
+            UPDATE companies
+            SET {', '.join(set_clauses)}
+            WHERE id = ${param_index}
+            RETURNING id, company_name, curated, created_at, updated_at
+        """
+        params.append(company_id)
+
+        async with pool.acquire() as conn:
+            row = await conn.fetchrow(query, *params)
 
             if row:
                 return Company(**dict(row))

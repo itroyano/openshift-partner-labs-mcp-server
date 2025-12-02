@@ -44,56 +44,67 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """Combined lifespan handler for MCP, storage, database, and ACM services initialization."""
     global oauth_service_instance
 
-    # Initialize storage service before starting
-    logger.info("Initializing storage service...")
+    # Track what was successfully initialized for proper cleanup
+    storage_initialized = False
+    partner_labs_initialized = False
+
     try:
-        if settings.ENABLE_AUTH:
-            from openshift_partner_labs_mcp_server.src.oauth.service import (
-                initialize_storage,
-            )
+        # Initialize storage service before starting
+        logger.info("Initializing storage service...")
+        try:
+            if settings.ENABLE_AUTH:
+                from openshift_partner_labs_mcp_server.src.oauth.service import (
+                    initialize_storage,
+                )
 
-            storage_service = await initialize_storage()
-            logger.info("Storage service initialized successfully")
+                storage_service = await initialize_storage()
+                logger.info("Storage service initialized successfully")
 
-            oauth_service_instance = OAuthService(storage_service)
-            logger.info("OAuth service initialized with dependency injection")
-    except Exception as e:
-        logger.critical(f"Failed to initialize storage service: {e}")
-        raise
+                oauth_service_instance = OAuthService(storage_service)
+                logger.info("OAuth service initialized with dependency injection")
+                storage_initialized = True
+        except Exception as e:
+            logger.critical(f"Failed to initialize storage service: {e}")
+            raise
 
-    # Initialize database and ACM services
-    logger.info("Initializing OpenShift Partner Labs services...")
-    try:
-        await server.initialize_services()
-        logger.info("Partner Labs services initialized successfully")
-    except Exception as e:
-        logger.critical(f"Failed to initialize Partner Labs services: {e}")
-        raise
+        # Initialize database and ACM services
+        logger.info("Initializing OpenShift Partner Labs services...")
+        try:
+            await server.initialize_services()
+            logger.info("Partner Labs services initialized successfully")
+            partner_labs_initialized = True
+        except Exception as e:
+            logger.critical(f"Failed to initialize Partner Labs services: {e}")
+            raise
 
-    # Run MCP lifespan
-    async with mcp_app.lifespan(app):
-        logger.info("Server is ready to accept connections")
-        yield
+        # Run MCP lifespan
+        async with mcp_app.lifespan(app):
+            logger.info("Server is ready to accept connections")
+            yield
 
-    # Cleanup services
-    logger.info("Shutting down Partner Labs services...")
-    try:
-        await server.cleanup()
-        logger.info("Partner Labs services shutdown complete")
-    except Exception as e:
-        logger.error(f"Error during Partner Labs services cleanup: {e}")
+    finally:
+        # Cleanup services - always run, even if initialization failed
+        # Only cleanup what was successfully initialized
+        if partner_labs_initialized:
+            logger.info("Shutting down Partner Labs services...")
+            try:
+                await server.cleanup()
+                logger.info("Partner Labs services shutdown complete")
+            except Exception as e:
+                logger.error(f"Error during Partner Labs services cleanup: {e}")
 
-    # Cleanup storage service
-    logger.info("Shutting down storage service...")
-    try:
-        if settings.ENABLE_AUTH:
-            from openshift_partner_labs_mcp_server.src.oauth.service import cleanup_storage
+        # Cleanup storage service
+        if storage_initialized:
+            logger.info("Shutting down storage service...")
+            try:
+                if settings.ENABLE_AUTH:
+                    from openshift_partner_labs_mcp_server.src.oauth.service import cleanup_storage
 
-            await cleanup_storage()
-            oauth_service_instance = None
-            logger.info("Storage service shutdown complete")
-    except Exception as e:
-        logger.error(f"Error during storage cleanup: {e}")
+                    await cleanup_storage()
+                    oauth_service_instance = None
+                    logger.info("Storage service shutdown complete")
+            except Exception as e:
+                logger.error(f"Error during storage cleanup: {e}")
 
 
 app = FastAPI(lifespan=lifespan)

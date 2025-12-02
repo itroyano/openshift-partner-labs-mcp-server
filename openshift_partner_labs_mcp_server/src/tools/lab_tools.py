@@ -22,6 +22,7 @@ from openshift_partner_labs_mcp_server.src.database.models import (
     ClusterSize,
 )
 from openshift_partner_labs_mcp_server.src.database.service import db_service
+from openshift_partner_labs_mcp_server.src.settings import settings
 from openshift_partner_labs_mcp_server.utils.pylogger import get_python_logger
 
 logger = get_python_logger()
@@ -233,10 +234,21 @@ async def approve_lab(generated_name: str) -> Dict[str, str]:
         )
 
         # Create cluster via ACM
+        # Use configured namespace or default to "default"
+        namespace = settings.ACM_NAMESPACE if hasattr(settings, 'ACM_NAMESPACE') and settings.ACM_NAMESPACE else "default"
+        
+        # Use configured base domain or construct from region
+        if hasattr(settings, 'ACM_DEFAULT_BASE_DOMAIN') and settings.ACM_DEFAULT_BASE_DOMAIN:
+            base_domain = settings.ACM_DEFAULT_BASE_DOMAIN
+        else:
+            # Fallback to region-based domain if no default is configured
+            base_domain = f"{lab.region}.example.com"
+            logger.warning(f"ACM_DEFAULT_BASE_DOMAIN not configured, using fallback: {base_domain}")
+        
         acm_request = ACMCreateClusterRequest(
             cluster_name=lab.cluster_name,
-            namespace="default",  # Could be made configurable
-            base_domain=f"{lab.region}.example.com",  # Should be configurable
+            namespace=namespace,
+            base_domain=base_domain,
             cloud_provider=lab.cloud_provider.lower(),
             region=lab.region,
             worker_nodes=3,  # Could be based on cluster_size
@@ -413,9 +425,12 @@ async def complete_lab(generated_name: str) -> Dict[str, str]:
             }
 
         # Delete cluster via ACM
+        # Use configured namespace or default to "default"
+        namespace = settings.ACM_NAMESPACE if hasattr(settings, 'ACM_NAMESPACE') and settings.ACM_NAMESPACE else "default"
+        
         acm_request = ACMDeleteClusterRequest(
             cluster_name=lab.cluster_name,
-            namespace="default",
+            namespace=namespace,
             force=False
         )
 
@@ -747,7 +762,7 @@ async def list_labs(
             "page_size": str(page_size),
             "total_pages": str(total_pages),
             "filters": ", ".join(filters_applied) if filters_applied else "none",
-            "labs": str(lab_list)  # Convert to string for MCP tool return
+            "labs": lab_list  # Return native list structure for MCP protocol
         }
 
     except Exception as e:

@@ -1,5 +1,6 @@
 """Configuration resources for MCP server."""
 
+from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
 from openshift_partner_labs_mcp_server.src.database.models import (
@@ -149,7 +150,7 @@ class ConfigResources(JSONResource):
                 }
             ],
             "metadata": {
-                "retrieved_at": "2024-12-02T00:00:00Z",
+                "retrieved_at": datetime.now(timezone.utc).isoformat().replace('+00:00', 'Z'),
                 "total_types": 6
             }
         }
@@ -201,7 +202,7 @@ class ConfigResources(JSONResource):
                 "denied": [LabState.PENDING, LabState.DENIED]
             },
             "metadata": {
-                "retrieved_at": "2024-12-02T00:00:00Z",
+                "retrieved_at": datetime.now(timezone.utc).isoformat().replace('+00:00', 'Z'),
                 "total_states": 6
             }
         }
@@ -275,7 +276,7 @@ class ConfigResources(JSONResource):
                 }
             ],
             "metadata": {
-                "retrieved_at": "2024-12-02T00:00:00Z",
+                "retrieved_at": datetime.now(timezone.utc).isoformat().replace('+00:00', 'Z'),
                 "total_providers": 9
             }
         }
@@ -328,7 +329,7 @@ class ConfigResources(JSONResource):
                 }
             ],
             "metadata": {
-                "retrieved_at": "2024-12-02T00:00:00Z",
+                "retrieved_at": datetime.now(timezone.utc).isoformat().replace('+00:00', 'Z'),
                 "total_regions": 6,
                 "default_region": Region.NA1
             }
@@ -400,7 +401,7 @@ class ConfigResources(JSONResource):
                 }
             ],
             "metadata": {
-                "retrieved_at": "2024-12-02T00:00:00Z",
+                "retrieved_at": datetime.now(timezone.utc).isoformat().replace('+00:00', 'Z'),
                 "total_sizes": 5,
                 "default_size": ClusterSize.MEDIUM
             }
@@ -423,7 +424,7 @@ class ConfigResources(JSONResource):
             "database": {
                 "type": "PostgreSQL",
                 "host": settings.DATABASE_HOST if hasattr(settings, 'DATABASE_HOST') else "configured",
-                "database": settings.DATABASE_NAME if hasattr(settings, 'DATABASE_NAME') else "configured"
+                "database": settings.DATABASE_DB if hasattr(settings, 'DATABASE_DB') else "configured"
             },
             "authentication": {
                 "enabled": bool(settings.ENABLE_AUTH) if hasattr(settings, 'ENABLE_AUTH') else False,
@@ -434,7 +435,7 @@ class ConfigResources(JSONResource):
                 "default_port": 8000
             },
             "metadata": {
-                "retrieved_at": "2024-12-02T00:00:00Z"
+                "retrieved_at": datetime.now(timezone.utc).isoformat().replace('+00:00', 'Z')
             }
         }
 
@@ -463,7 +464,7 @@ class ConfigResources(JSONResource):
                 "max_page_size": 100
             },
             "metadata": {
-                "retrieved_at": "2024-12-02T00:00:00Z",
+                "retrieved_at": datetime.now(timezone.utc).isoformat().replace('+00:00', 'Z'),
                 "note": "These limits are configurable and may vary by deployment"
             }
         }
@@ -479,7 +480,7 @@ class ConfigResources(JSONResource):
             "server_config": (await self._get_server_config())["server"],
             "limits": (await self._get_system_limits())["limits"],
             "metadata": {
-                "retrieved_at": "2024-12-02T00:00:00Z",
+                "retrieved_at": datetime.now(timezone.utc).isoformat().replace('+00:00', 'Z'),
                 "description": "Complete configuration data for OpenShift Partner Labs"
             }
         }
@@ -521,7 +522,7 @@ class ConfigResources(JSONResource):
                 }
             },
             "metadata": {
-                "retrieved_at": "2024-12-02T00:00:00Z",
+                "retrieved_at": datetime.now(timezone.utc).isoformat().replace('+00:00', 'Z'),
                 "description": "JSON Schema definitions for API requests and responses"
             }
         }
