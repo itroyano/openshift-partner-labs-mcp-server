@@ -1,4 +1,4 @@
-"""Multiply tool for the Template MCP Server.
+"""Multiply tool for the Partner Labs MCP Server.
 
 This tool demonstrates basic arithmetic functionality by multiplying two numbers.
 """

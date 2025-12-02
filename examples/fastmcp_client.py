@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """MCP Server Demo - Using FastMCP Client.
 
-This example demonstrates how to connect to the running template MCP server
+This example demonstrates how to connect to the running Partner Labs MCP server
 using the FastMCP Client and make actual MCP protocol calls.
 """
 
@@ -13,7 +13,7 @@ from fastmcp import Client
 
 
 class FastMCPClient:
-    """Demo client for the template MCP server using FastMCP Client."""
+    """Demo client for the Partner Labs MCP server using FastMCP Client."""
 
     def __init__(self, server_url: str):
         """Initialize the MCP client demo.
@@ -119,7 +119,7 @@ class FastMCPClient:
 
     async def run_demo(self):
         """Run the complete demo using FastMCP Client."""
-        print("Template MCP Server Demo with FastMCP Client")
+        print("Partner Labs MCP Server Demo with FastMCP Client")
         print("=" * 60)
 
         # Check server health
@@ -155,7 +155,7 @@ async def main():
     demo = FastMCPClient(server_url="http://0.0.0.0:3000")
 
     # Test MCP server deployed on openshift
-    # demo = FastMCPClient(server_url="https://template-mcp-server.apps.int.spoke.preprod.us-west-2.aws.paas.redhat.com")
+    # demo = FastMCPClient(server_url="https://partner-labs-mcp-server.apps.int.spoke.preprod.us-west-2.aws.paas.redhat.com")
     await demo.run_demo()
 
 

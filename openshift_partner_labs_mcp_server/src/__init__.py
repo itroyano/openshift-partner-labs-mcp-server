@@ -1,1 +1,1 @@
-"""Source package for template MCP server."""
+"""Source package for Partner Labs MCP server."""

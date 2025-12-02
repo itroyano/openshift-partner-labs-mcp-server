@@ -34,23 +34,23 @@ class DatabaseService:
         """Initialize database connection pool."""
         try:
             if not all([
-                settings.POSTGRES_HOST,
-                settings.POSTGRES_PORT,
-                settings.POSTGRES_DB,
-                settings.POSTGRES_USER,
-                settings.POSTGRES_PASSWORD
+                settings.DATABASE_HOST,
+                settings.DATABASE_PORT,
+                settings.DATABASE_DB,
+                settings.DATABASE_USER,
+                settings.DATABASE_PASSWORD
             ]):
                 raise ValueError("Missing required PostgreSQL configuration")
 
             dsn = (
-                f"postgresql://{settings.POSTGRES_USER}:{settings.POSTGRES_PASSWORD}"
-                f"@{settings.POSTGRES_HOST}:{settings.POSTGRES_PORT}/{settings.POSTGRES_DB}"
+                f"postgresql://{settings.DATABASE_USER}:{settings.DATABASE_PASSWORD}"
+                f"@{settings.DATABASE_HOST}:{settings.DATABASE_PORT}/{settings.DATABASE_DB}"
             )
 
             self._pool = await asyncpg.create_pool(
                 dsn,
-                min_size=settings.POSTGRES_POOL_SIZE,
-                max_size=settings.POSTGRES_MAX_CONNECTIONS,
+                min_size=settings.DATABASE_POOL_SIZE,
+                max_size=settings.DATABASE_MAX_CONNECTIONS,
                 command_timeout=60,
             )
 

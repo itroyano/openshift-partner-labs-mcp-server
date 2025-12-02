@@ -1,4 +1,4 @@
-"""Red Hat logo tool for the Template MCP Server.
+"""Red Hat logo tool for the Partner Labs MCP Server.
 
 This tool provides functionality to read and serve the Red Hat logo
 as a base64 encoded resource for MCP clients as a tool.

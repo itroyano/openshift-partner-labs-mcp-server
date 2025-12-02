@@ -1,4 +1,4 @@
-"""Settings for the Template MCP Server."""
+"""Settings for the Partner Labs MCP Server."""
 
 from typing import List, Optional
 
@@ -20,7 +20,7 @@ except Exception as e:
 
 
 class Settings(BaseSettings):
-    """Configuration settings for the Template MCP Server.
+    """Configuration settings for the Partner Labs MCP Server.
 
     Uses Pydantic BaseSettings to load and validate configuration from environment variables.
     Provides default values for optional settings and validation for required ones.
@@ -185,65 +185,65 @@ class Settings(BaseSettings):
     )
 
     # PostgreSQL Configuration
-    POSTGRES_HOST: Optional[str] = Field(
+    DATABASE_HOST: Optional[str] = Field(
         default=None,
         json_schema_extra={
-            "env": "POSTGRES_HOST",
+            "env": "DATABASE_HOST",
             "description": "PostgreSQL host address",
             "example": "localhost",
         },
     )
-    POSTGRES_PORT: Optional[int] = Field(
+    DATABASE_PORT: Optional[int] = Field(
         default=None,
         ge=1024,
         le=65535,
         json_schema_extra={
-            "env": "POSTGRES_PORT",
+            "env": "DATABASE_PORT",
             "description": "PostgreSQL port number",
             "example": 5432,
         },
     )
-    POSTGRES_DB: Optional[str] = Field(
+    DATABASE_DB: Optional[str] = Field(
         default=None,
         json_schema_extra={
-            "env": "POSTGRES_DB",
+            "env": "DATABASE_DB",
             "description": "PostgreSQL database name",
             "example": "openshift_partner_labs_mcp_server",
         },
     )
-    POSTGRES_USER: Optional[str] = Field(
+    DATABASE_USER: Optional[str] = Field(
         default=None,
         json_schema_extra={
-            "env": "POSTGRES_USER",
+            "env": "DATABASE_USER",
             "description": "PostgreSQL username",
             "example": "postgres",
         },
     )
-    POSTGRES_PASSWORD: Optional[str] = Field(
+    DATABASE_PASSWORD: Optional[str] = Field(
         default=None,
         json_schema_extra={
-            "env": "POSTGRES_PASSWORD",
+            "env": "DATABASE_PASSWORD",
             "description": "PostgreSQL password",
             "example": "secretpassword",
             "sensitive": True,
         },
     )
-    POSTGRES_POOL_SIZE: int = Field(
+    DATABASE_POOL_SIZE: int = Field(
         default=10,
         ge=1,
         le=100,
         json_schema_extra={
-            "env": "POSTGRES_POOL_SIZE",
+            "env": "DATABASE_POOL_SIZE",
             "description": "PostgreSQL connection pool minimum size",
             "example": 10,
         },
     )
-    POSTGRES_MAX_CONNECTIONS: int = Field(
+    DATABASE_MAX_CONNECTIONS: int = Field(
         default=20,
         ge=1,
         le=200,
         json_schema_extra={
-            "env": "POSTGRES_MAX_CONNECTIONS",
+            "env": "DATABASE_MAX_CONNECTIONS",
             "description": "PostgreSQL connection pool maximum size",
             "example": 20,
         },

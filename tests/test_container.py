@@ -72,7 +72,7 @@ class TestContainerBuild:
     def test_container_build_success(self):
         """Test that container builds successfully with podman."""
         # Arrange
-        image_name = "template-mcp-server-test"
+        image_name = "partner-labs-mcp-server-test"
         build_cmd = ["podman", "build", "-t", image_name, "."]
         cleanup_cmd = ["podman", "rmi", image_name]
 
@@ -103,7 +103,7 @@ class TestContainerExecution:
     def test_container_startup_and_health(self):
         """Test that container starts and responds to HTTP requests."""
         # Arrange
-        image_name = "template-mcp-server-test"
+        image_name = "partner-labs-mcp-server-test"
         container_name = "template-mcp-test-container"
         build_cmd = ["podman", "build", "-t", image_name, "."]
         run_cmd = [
@@ -274,7 +274,7 @@ class TestProductionDeployment:
     def test_container_resource_usage(self):
         """Test container resource usage and startup time."""
         # Arrange
-        image_name = "template-mcp-server-test"
+        image_name = "partner-labs-mcp-server-test"
         build_cmd = ["podman", "build", "-t", image_name, "."]
         inspect_cmd = ["podman", "inspect", image_name]
         cleanup_cmd = ["podman", "rmi", image_name]

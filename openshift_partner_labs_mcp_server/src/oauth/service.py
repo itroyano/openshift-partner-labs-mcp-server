@@ -401,19 +401,19 @@ async def initialize_storage() -> StorageService:
     # Validate required configuration
     if not all(
         [
-            settings.POSTGRES_HOST,
-            settings.POSTGRES_PORT,
-            settings.POSTGRES_DB,
-            settings.POSTGRES_USER,
+            settings.DATABASE_HOST,
+            settings.DATABASE_PORT,
+            settings.DATABASE_DB,
+            settings.DATABASE_USER,
         ]
     ):
         missing = [
             name
             for name, value in [
-                ("POSTGRES_HOST", settings.POSTGRES_HOST),
-                ("POSTGRES_PORT", settings.POSTGRES_PORT),
-                ("POSTGRES_DB", settings.POSTGRES_DB),
-                ("POSTGRES_USER", settings.POSTGRES_USER),
+                ("DATABASE_HOST", settings.DATABASE_HOST),
+                ("DATABASE_PORT", settings.DATABASE_PORT),
+                ("DATABASE_DB", settings.DATABASE_DB),
+                ("DATABASE_USER", settings.DATABASE_USER),
             ]
             if not value
         ]
@@ -424,15 +424,15 @@ async def initialize_storage() -> StorageService:
     # Create and connect storage service
     # Type assertions are safe here because we validated required fields above
     _storage_service = StorageService(
-        host=str(settings.POSTGRES_HOST),
-        port=int(settings.POSTGRES_PORT)
-        if settings.POSTGRES_PORT is not None
+        host=str(settings.DATABASE_HOST),
+        port=int(settings.DATABASE_PORT)
+        if settings.DATABASE_PORT is not None
         else 5432,
-        database=str(settings.POSTGRES_DB),
-        username=str(settings.POSTGRES_USER),
-        password=settings.POSTGRES_PASSWORD or "",
-        pool_size=settings.POSTGRES_POOL_SIZE,
-        max_connections=settings.POSTGRES_MAX_CONNECTIONS,
+        database=str(settings.DATABASE_DB),
+        username=str(settings.DATABASE_USER),
+        password=settings.DATABASE_PASSWORD or "",
+        pool_size=settings.DATABASE_POOL_SIZE,
+        max_connections=settings.DATABASE_MAX_CONNECTIONS,
     )
     await _storage_service.connect()
     logger.info("PostgreSQL storage service initialized successfully")

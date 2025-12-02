@@ -20,13 +20,13 @@ psql -h localhost -p 5432 -U postgres -d openshift_partner_labs_app -f migration
 ### Using Environment Variables
 
 ```bash
-export POSTGRES_HOST=localhost
-export POSTGRES_PORT=5432
-export POSTGRES_DB=openshift_partner_labs_app
-export POSTGRES_USER=postgres
-export POSTGRES_PASSWORD=yourpassword
+export DATABASE_HOST=localhost
+export DATABASE_PORT=5432
+export DATABASE_DB=openshift_partner_labs_app
+export DATABASE_USER=postgres
+export DATABASE_PASSWORD=yourpassword
 
-psql -h $POSTGRES_HOST -p $POSTGRES_PORT -U $POSTGRES_USER -d $POSTGRES_DB -f migrations/002_labs_schema.sql
+psql -h $DATABASE_HOST -p $DATABASE_PORT -U $DATABASE_USER -d $DATABASE_DB -f migrations/002_labs_schema.sql
 ```
 
 ### Docker/Podman

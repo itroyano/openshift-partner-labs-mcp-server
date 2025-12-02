@@ -1,1 +1,1 @@
-"""PostgreSQL storage service for the Template MCP Server."""
+"""PostgreSQL storage service for the Partner Labs MCP Server."""

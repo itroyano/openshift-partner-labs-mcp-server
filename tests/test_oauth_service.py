@@ -135,13 +135,13 @@ class TestStorageService:
             with patch(
                 "openshift_partner_labs_mcp_server.src.oauth.service.settings"
             ) as mock_settings:
-                mock_settings.POSTGRES_HOST = "localhost"
-                mock_settings.POSTGRES_PORT = 5432
-                mock_settings.POSTGRES_DB = "testdb"
-                mock_settings.POSTGRES_USER = "testuser"
-                mock_settings.POSTGRES_PASSWORD = "testpass"
-                mock_settings.POSTGRES_POOL_SIZE = 10
-                mock_settings.POSTGRES_MAX_CONNECTIONS = 20
+                mock_settings.DATABASE_HOST = "localhost"
+                mock_settings.DATABASE_PORT = 5432
+                mock_settings.DATABASE_DB = "testdb"
+                mock_settings.DATABASE_USER = "testuser"
+                mock_settings.DATABASE_PASSWORD = "testpass"
+                mock_settings.DATABASE_POOL_SIZE = 10
+                mock_settings.DATABASE_MAX_CONNECTIONS = 20
 
                 result = await initialize_storage()
 
@@ -166,10 +166,10 @@ class TestStorageService:
             with patch(
                 "openshift_partner_labs_mcp_server.src.oauth.service.settings"
             ) as mock_settings:
-                mock_settings.POSTGRES_HOST = None
-                mock_settings.POSTGRES_PORT = 5432
-                mock_settings.POSTGRES_DB = "testdb"
-                mock_settings.POSTGRES_USER = "testuser"
+                mock_settings.DATABASE_HOST = None
+                mock_settings.DATABASE_PORT = 5432
+                mock_settings.DATABASE_DB = "testdb"
+                mock_settings.DATABASE_USER = "testuser"
 
                 with pytest.raises(
                     ValueError, match="Missing required PostgreSQL configuration"

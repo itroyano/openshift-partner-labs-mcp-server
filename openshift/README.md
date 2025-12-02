@@ -58,8 +58,8 @@ kubectl apply -f service.yaml
      MCP_HOST: "0.0.0.0"
      MCP_PORT: "8443"
      LOG_LEVEL: "INFO"
-     POSTGRES_HOST: "postgresql-service"
-     POSTGRES_DB: "openshift_partner_labs_app"
+     DATABASE_HOST: "postgresql-service"
+     DATABASE_DB: "openshift_partner_labs_app"
    ```
 
 ## 🛡️ **Security Features**

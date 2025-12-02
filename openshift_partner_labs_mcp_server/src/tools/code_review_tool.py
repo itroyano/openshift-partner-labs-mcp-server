@@ -1,4 +1,4 @@
-"""Code review tool for the Template MCP Server.
+"""Code review tool for the Partner Labs MCP Server.
 
 This tool provides functionality to generate code review prompts
 for various programming languages as an MCP tool.

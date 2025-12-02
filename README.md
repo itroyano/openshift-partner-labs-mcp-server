@@ -157,11 +157,11 @@ MCP_PORT=8080
 MCP_TRANSPORT_PROTOCOL=http
 
 # Database Configuration
-POSTGRES_HOST=localhost
-POSTGRES_PORT=5432
-POSTGRES_DB=openshift_partner_labs
-POSTGRES_USER=postgres
-POSTGRES_PASSWORD=your_password
+DATABASE_HOST=localhost
+DATABASE_PORT=5432
+DATABASE_DB=openshift_partner_labs
+DATABASE_USER=postgres
+DATABASE_PASSWORD=your_password
 
 # OpenShift ACM Configuration
 ACM_KUBECONFIG_PATH=/path/to/kubeconfig
@@ -183,7 +183,7 @@ PYTHON_LOG_LEVEL=INFO
 
 - **`ENABLE_AUTH`**: Set to `true` to enable OAuth2 authentication
 - **`MCP_TRANSPORT_PROTOCOL`**: Choose from `http`, `streamable-http`, or `sse`
-- **`POSTGRES_*`**: PostgreSQL database connection settings
+- **`DATABASE_*`**: PostgreSQL database connection settings
 - **`ACM_*`**: OpenShift Advanced Cluster Management configuration:
   - **`ACM_KUBECONFIG_PATH`**: Path to kubeconfig file for ACM cluster access
   - **`ACM_NAMESPACE`**: Kubernetes namespace for ACM operations (default: `open-cluster-management`)
