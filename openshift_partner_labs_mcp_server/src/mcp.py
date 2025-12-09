@@ -259,43 +259,279 @@ class PartnerLabsMCPServer:
         logger.info("Registered all MCP resource handlers")
 
     def _register_mcp_handlers(self) -> None:
-        """Register MCP protocol handlers for resources.
+        """Bridge custom ResourceManager resources to FastMCP using the @resource() decorator.
 
-        Registers handlers for resources/list and resources/read MCP protocol methods
-        that delegate to the ResourceManager. This connects the ResourceManager to
-        FastMCP so that clients can access resources via the MCP protocol.
-        
-        Note: FastMCP doesn't provide a resource() decorator like tool(). Instead,
-        we need to manually register resource handlers. FastMCP v2.10.4 supports
-        resources through the MCP protocol, but requires manual handler registration.
-        We store the handlers and they will be called by FastMCP's MCP protocol layer.
+        FastMCP uses a decorator-based approach for resource registration, similar to tools.
+        This method creates FastMCP resource decorators for each resource type managed
+        by our custom ResourceManager, allowing them to be properly exposed via the MCP protocol.
+
+        The decorator approach is the correct way to register resources with FastMCP v2.10.4.
         """
-        # Create handler functions that delegate to ResourceManager
-        async def list_resources_handler() -> List[Dict[str, Any]]:
-            """List all available resources from the ResourceManager."""
-            return await self.resource_manager.list_resources()
+        # Lab collection resources
+        @self.mcp.resource(
+            "labs://all",
+            name="All Labs",
+            description="Complete list of all partner labs",
+            mime_type="application/json"
+        )
+        async def labs_all():
+            """Get all labs."""
+            return await self.resource_manager.read_resource("labs://all")
 
-        async def read_resource_handler(uri: str) -> Dict[str, Any]:
-            """Read a resource by URI from the ResourceManager."""
-            return await self.resource_manager.read_resource(uri)
+        @self.mcp.resource(
+            "labs://pending",
+            name="Pending Labs",
+            description="Labs awaiting approval",
+            mime_type="application/json"
+        )
+        async def labs_pending():
+            """Get pending labs."""
+            return await self.resource_manager.read_resource("labs://pending")
 
-        # Store handlers for FastMCP to use
-        # FastMCP will call these through the MCP protocol when clients request resources
-        # The handlers are stored as instance methods that FastMCP can discover
-        self._list_resources_handler = list_resources_handler
-        self._read_resource_handler = read_resource_handler
+        @self.mcp.resource(
+            "labs://active",
+            name="Active Labs",
+            description="Currently running labs",
+            mime_type="application/json"
+        )
+        async def labs_active():
+            """Get active labs."""
+            return await self.resource_manager.read_resource("labs://active")
 
-        # Register handlers with FastMCP using the add_resource_handler method if available
-        # Otherwise, FastMCP will discover them through the MCP protocol
-        if hasattr(self.mcp, 'add_resource_handler'):
-            self.mcp.add_resource_handler(list_resources_handler, read_resource_handler)
-        elif hasattr(self.mcp, 'list_resources'):
-            # Try direct assignment if FastMCP supports it
-            self.mcp.list_resources = list_resources_handler
-            self.mcp.read_resource = read_resource_handler
-        else:
-            # FastMCP may handle resources automatically through protocol inspection
-            # The ResourceManager is ready and handlers are stored for protocol use
-            logger.debug("FastMCP resource handlers stored - will be used via MCP protocol")
+        @self.mcp.resource(
+            "labs://completed",
+            name="Completed Labs",
+            description="Successfully completed labs",
+            mime_type="application/json"
+        )
+        async def labs_completed():
+            """Get completed labs."""
+            return await self.resource_manager.read_resource("labs://completed")
 
-        logger.info("MCP resource protocol handlers registered with FastMCP")
+        # Individual lab resources with parameters
+        @self.mcp.resource(
+            "lab://{lab_id}",
+            name="Lab Details",
+            description="Detailed information about a specific lab",
+            mime_type="application/json"
+        )
+        async def lab_by_id(lab_id: str):
+            """Get lab details by ID."""
+            return await self.resource_manager.read_resource(f"lab://{lab_id}")
+
+        @self.mcp.resource(
+            "lab://name/{lab_name}",
+            name="Lab by Name",
+            description="Lab information by name",
+            mime_type="application/json"
+        )
+        async def lab_by_name(lab_name: str):
+            """Get lab details by name."""
+            return await self.resource_manager.read_resource(f"lab://name/{lab_name}")
+
+        @self.mcp.resource(
+            "lab://{lab_id}/status",
+            name="Lab Status",
+            description="Current status and state of a specific lab",
+            mime_type="application/json"
+        )
+        async def lab_status(lab_id: str):
+            """Get lab status."""
+            return await self.resource_manager.read_resource(f"lab://{lab_id}/status")
+
+        @self.mcp.resource(
+            "lab://{lab_id}/events",
+            name="Lab Events",
+            description="Event history for a specific lab",
+            mime_type="application/json"
+        )
+        async def lab_events(lab_id: str):
+            """Get lab events."""
+            return await self.resource_manager.read_resource(f"lab://{lab_id}/events")
+
+        # Company collection resources
+        @self.mcp.resource(
+            "companies://all",
+            name="All Companies",
+            description="Complete list of partner companies",
+            mime_type="application/json"
+        )
+        async def companies_all():
+            """Get all companies."""
+            return await self.resource_manager.read_resource("companies://all")
+
+        @self.mcp.resource(
+            "companies://curated",
+            name="Curated Companies",
+            description="Curated partner companies",
+            mime_type="application/json"
+        )
+        async def companies_curated():
+            """Get curated companies."""
+            return await self.resource_manager.read_resource("companies://curated")
+
+        # Individual company resources
+        @self.mcp.resource(
+            "company://{company_id}",
+            name="Company Details",
+            description="Detailed information about a specific company",
+            mime_type="application/json"
+        )
+        async def company_by_id(company_id: str):
+            """Get company details by ID."""
+            return await self.resource_manager.read_resource(f"company://{company_id}")
+
+        @self.mcp.resource(
+            "company://name/{company_name}",
+            name="Company by Name",
+            description="Company information by name",
+            mime_type="application/json"
+        )
+        async def company_by_name(company_name: str):
+            """Get company details by name."""
+            return await self.resource_manager.read_resource(f"company://name/{company_name}")
+
+        @self.mcp.resource(
+            "company://{company_id}/labs",
+            name="Company Labs",
+            description="All labs associated with a specific company",
+            mime_type="application/json"
+        )
+        async def company_labs(company_id: str):
+            """Get labs for a company."""
+            return await self.resource_manager.read_resource(f"company://{company_id}/labs")
+
+        @self.mcp.resource(
+            "company://{company_id}/stats",
+            name="Company Statistics",
+            description="Statistics and metrics for a specific company",
+            mime_type="application/json"
+        )
+        async def company_stats(company_id: str):
+            """Get company statistics."""
+            return await self.resource_manager.read_resource(f"company://{company_id}/stats")
+
+        # Configuration resources
+        @self.mcp.resource(
+            "config://lab-types",
+            name="Lab Types",
+            description="Available lab types and configurations",
+            mime_type="application/json"
+        )
+        async def config_lab_types():
+            """Get lab types configuration."""
+            return await self.resource_manager.read_resource("config://lab-types")
+
+        @self.mcp.resource(
+            "config://cloud-providers",
+            name="Cloud Providers",
+            description="Supported cloud providers and regions",
+            mime_type="application/json"
+        )
+        async def config_providers():
+            """Get cloud providers configuration."""
+            return await self.resource_manager.read_resource("config://cloud-providers")
+
+        @self.mcp.resource(
+            "config://regions",
+            name="Available Regions",
+            description="Supported deployment regions",
+            mime_type="application/json"
+        )
+        async def config_regions():
+            """Get regions configuration."""
+            return await self.resource_manager.read_resource("config://regions")
+
+        @self.mcp.resource(
+            "config://cluster-sizes",
+            name="Cluster Sizes",
+            description="Available cluster size configurations",
+            mime_type="application/json"
+        )
+        async def config_cluster_sizes():
+            """Get cluster sizes configuration."""
+            return await self.resource_manager.read_resource("config://cluster-sizes")
+
+        @self.mcp.resource(
+            "config://server",
+            name="Server Configuration",
+            description="Server settings and capabilities",
+            mime_type="application/json"
+        )
+        async def config_server():
+            """Get server configuration."""
+            return await self.resource_manager.read_resource("config://server")
+
+        @self.mcp.resource(
+            "config://limits",
+            name="System Limits",
+            description="Resource limits and quotas",
+            mime_type="application/json"
+        )
+        async def config_limits():
+            """Get system limits configuration."""
+            return await self.resource_manager.read_resource("config://limits")
+
+        # Asset resources
+        @self.mcp.resource(
+            "assets://redhat-logo",
+            name="Red Hat Logo",
+            description="Red Hat logo as base64 encoded PNG",
+            mime_type="image/png"
+        )
+        async def asset_redhat_logo():
+            """Get Red Hat logo."""
+            return await self.resource_manager.read_resource("assets://redhat-logo")
+
+        @self.mcp.resource(
+            "assets://branding/{asset_name}",
+            name="Branding Assets",
+            description="Red Hat branding materials",
+            mime_type="image/png"
+        )
+        async def asset_branding(asset_name: str):
+            """Get branding assets."""
+            return await self.resource_manager.read_resource(f"assets://branding/{asset_name}")
+
+        @self.mcp.resource(
+            "assets://templates/{template_name}",
+            name="Template Assets",
+            description="Document and configuration templates",
+            mime_type="text/plain"
+        )
+        async def asset_templates(template_name: str):
+            """Get template assets."""
+            return await self.resource_manager.read_resource(f"assets://templates/{template_name}")
+
+        @self.mcp.resource(
+            "assets://{asset_name}",
+            name="Generic Assets",
+            description="Static asset files",
+            mime_type="application/octet-stream"
+        )
+        async def asset_generic(asset_name: str):
+            """Get generic assets."""
+            return await self.resource_manager.read_resource(f"assets://{asset_name}")
+
+        # Asset info resources
+        @self.mcp.resource(
+            "assets://directory",
+            name="Asset Directory",
+            description="Directory listing of all available assets",
+            mime_type="application/json"
+        )
+        async def assets_directory():
+            """Get asset directory listing."""
+            return await self.resource_manager.read_resource("assets://directory")
+
+        @self.mcp.resource(
+            "assets://info/{asset_name}",
+            name="Asset Information",
+            description="Metadata and information about specific assets",
+            mime_type="application/json"
+        )
+        async def asset_info(asset_name: str):
+            """Get asset information."""
+            return await self.resource_manager.read_resource(f"assets://info/{asset_name}")
+
+        logger.info("Successfully registered all resources with FastMCP using @resource() decorators")
