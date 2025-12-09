@@ -92,8 +92,8 @@ class TestPartnerLabsMCPServer:
         # Assert
         # Verify that tool() was called multiple times (once for each tool)
         assert (
-            mock_mcp.tool.call_count >= 3
-        )  # multiply_numbers, generate_code_review_prompt, get_redhat_logo
+            mock_mcp.tool.call_count >= 12
+        )  # Lab management tools (7) + Company management tools (5)
 
     def test_server_attributes(self):
         """Test that server has required attributes for hybrid architecture."""

@@ -130,7 +130,7 @@ async def get_agent_redhat():
 
     The agent is configured with:
     - Google Generative AI (Gemini 2.0 Flash) as the language model
-    - Tools from the Partner Labs MCP server (e.g., multiply_numbers)
+    - Tools from the Partner Labs MCP server (e.g., lab management tools)
     - A system prompt that guides tool usage and response formatting
 
     Note:
@@ -153,7 +153,7 @@ async def get_agent_redhat():
     client = MultiServerMCPClient(
         {
             "openshift_partner_labs_mcp_server": {
-                "url": "http://0.0.0.0:8080/mcp/",
+                "url": "http://0.0.0.0:8000/mcp/",
                 "transport": "streamable_http",
             },
         }
@@ -195,7 +195,7 @@ async def demonstrate_tool_calls():
     3. Response Processing: How the agent interprets tool responses
     4. Final Answer Generation: How the agent provides user-friendly responses
 
-    The example uses the multiply_numbers tool to perform calculations
+    The example demonstrates available tools for lab management operations
     and shows the complete conversation flow including tool calls.
     """
     print("\n" + "=" * 60)

@@ -115,7 +115,7 @@ class TestContainerExecution:
             "--name",
             container_name,
             "-p",
-            "8081:8080",
+            "8081:8000",
             image_name,
         ]
         stop_cmd = ["podman", "stop", container_name]
@@ -140,7 +140,7 @@ class TestContainerExecution:
 
             # Test that container is responding (may be 404 if no root endpoint)
             with httpx.Client() as client:
-                response = client.get("http://localhost:8080/", timeout=10)
+                response = client.get("http://localhost:8000/", timeout=10)
 
                 # Accept any HTTP response (404, 200, etc.) - just confirm server is listening
                 assert response.status_code >= 200, (

@@ -88,7 +88,7 @@ oc get routes
 oc logs deployment/openshift-partner-labs-mcp-server
 
 # Port forward for testing
-oc port-forward svc/openshift-partner-labs-mcp-server 8080:8443
+oc port-forward svc/openshift-partner-labs-mcp-server 8000:8443
 
 # Test the service
 curl https://openshift-partner-labs-mcp-server.apps.cluster.com/health

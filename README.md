@@ -153,7 +153,7 @@ Create a `.env` file in the project root:
 ```env
 # MCP Server Configuration
 MCP_HOST=0.0.0.0
-MCP_PORT=8080
+MCP_PORT=8000
 MCP_TRANSPORT_PROTOCOL=http
 
 # Database Configuration
@@ -238,7 +238,7 @@ The server supports multiple transport protocols that can be configured via the 
 
 4. **Verify the server is running**:
    ```bash
-   curl http://localhost:8080/health
+   curl http://localhost:8000/health
    ```
 
 ### Server Endpoints
@@ -246,12 +246,12 @@ The server supports multiple transport protocols that can be configured via the 
 Once running, the server provides these endpoints:
 
 **HTTP Protocol** (default):
-- **MCP Server**: `http://localhost:8080/mcp`
-- **Health Check**: `http://localhost:8080/health`
+- **MCP Server**: `http://localhost:8000/mcp`
+- **Health Check**: `http://localhost:8000/health`
 
 **SSE Protocol** (if configured):
-- **SSE Endpoint**: `http://localhost:8080/sse`
-- **Health Check**: `http://localhost:8080/health`
+- **SSE Endpoint**: `http://localhost:8000/sse`
+- **Health Check**: `http://localhost:8000/health`
 
 ## Available Tools
 
@@ -323,9 +323,7 @@ The server provides comprehensive MCP tools for OpenShift Partner Labs managemen
 
 ### Core Utility Tools
 
-- **`multiply_numbers`**: Mathematical operations for capacity planning
-- **`generate_code_review_prompt`**: Code analysis assistance
-- **`get_redhat_logo`**: Red Hat branding assets
+(No utility tools currently implemented)
 
 ### Usage Examples
 
@@ -335,7 +333,7 @@ from fastmcp import FastMCP
 import asyncio
 
 async def lab_management_example():
-    client = FastMCP("http://localhost:8080/mcp")
+    client = FastMCP("http://localhost:8000/mcp")
 
     # Create a new lab
     lab_result = await client.call_tool("create_lab", {
@@ -462,11 +460,11 @@ pre-commit run --all-files
 pytest tests/test_container.py -v
 
 # Option 1: Use pre-built image from GitHub Container Registry
-podman run -p 8080:8080 ghcr.io/mrhillsman/openshift-partner-labs-mcp-server:latest
+podman run -p 8000:8000 ghcr.io/mrhillsman/openshift-partner-labs-mcp-server:latest
 
 # Option 2: Build container manually
 podman build -t openshift-partner-labs-mcp-server .
-podman run -p 8080:8080 openshift-partner-labs-mcp-server
+podman run -p 8000:8000 openshift-partner-labs-mcp-server
 ```
 
 ## Releases

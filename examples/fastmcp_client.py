@@ -63,10 +63,12 @@ class FastMCPClient:
                 print(f"   - {tool.name}: {tool.description}")
                 print(f"     Arguments: {tool.inputSchema}")
 
-            # Test multiply tool
-            print("\n🔧 Testing multiply_numbers tool:")
-            result = await client.call_tool("multiply_numbers", {"a": 15, "b": 7})
-            print(f"   Result: {result}")
+            # Test lab management tools (if available)
+            print("\n🔧 Testing available tools...")
+            if tools:
+                first_tool = tools[0]
+                print(f"   Available tool: {first_tool.name}")
+                print(f"   Description: {first_tool.description}")
 
         except Exception as e:
             print(f"   Error accessing tools: {e}")
@@ -152,7 +154,7 @@ class FastMCPClient:
 async def main():
     """Main function to run the demo."""
     # Test MCP server deployed locally
-    demo = FastMCPClient(server_url="http://0.0.0.0:8080")
+    demo = FastMCPClient(server_url="http://0.0.0.0:8000")
 
     # Test MCP server deployed on openshift
     # demo = FastMCPClient(server_url="https://partner-labs-mcp-server.apps.int.spoke.preprod.us-west-2.aws.paas.redhat.com")

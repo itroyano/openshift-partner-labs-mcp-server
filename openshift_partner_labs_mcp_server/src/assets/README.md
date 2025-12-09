@@ -72,7 +72,7 @@ return {
 
 ## 📋 **Current Assets**
 
-- `redhat.png` - Red Hat logo (accessed by `redhat_logo_tool.py`)
+- `redhat.png` - Red Hat logo (accessed via assets://redhat-logo resource)
 
 ## ✅ **Best Practices**
 

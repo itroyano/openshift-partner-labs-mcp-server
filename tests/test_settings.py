@@ -18,7 +18,7 @@ class TestSettings:
 
         # Assert
         assert settings.MCP_HOST == "0.0.0.0"
-        assert settings.MCP_PORT == 8080
+        assert settings.MCP_PORT == 8000
         assert settings.MCP_TRANSPORT_PROTOCOL == "http"
         assert settings.PYTHON_LOG_LEVEL == "INFO"
         assert settings.MCP_SSL_KEYFILE is None
@@ -29,7 +29,7 @@ class TestSettings:
         # Arrange
         env_vars = {
             "MCP_HOST": "localhost",
-            "MCP_PORT": "8080",
+            "MCP_PORT": "8000",
             "MCP_TRANSPORT_PROTOCOL": "streamable-http",
             "PYTHON_LOG_LEVEL": "DEBUG",
             "MCP_SSL_KEYFILE": "/path/to/key.pem",
@@ -42,7 +42,7 @@ class TestSettings:
 
         # Assert
         assert settings.MCP_HOST == "localhost"
-        assert settings.MCP_PORT == 8080
+        assert settings.MCP_PORT == 8000
         assert settings.MCP_TRANSPORT_PROTOCOL == "streamable-http"
         assert settings.PYTHON_LOG_LEVEL == "DEBUG"
         assert settings.MCP_SSL_KEYFILE == "/path/to/key.pem"

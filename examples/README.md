@@ -37,8 +37,8 @@ python examples/langgraph_client.py
 
 ```python
 # Both files - update these URLs
-server_url = "http://localhost:8080/mcp"      # Local development
-# server_url = "http://0.0.0.0:8080/mcp"     # Local development (all interfaces)
+server_url = "http://localhost:8000/mcp"      # Local development
+# server_url = "http://0.0.0.0:8000/mcp"     # Local development (all interfaces)
 # server_url = "https://openshift-partner-labs-mcp-server.apps.cluster.com/mcp"  # Production OpenShift
 ```
 
@@ -108,14 +108,14 @@ company = await client.call_tool("create_company", {
 
 ```bash
 # Test server health first
-curl http://localhost:8080/health
+curl http://localhost:8000/health
 
 # Run client examples to verify lab management integration
 python examples/fastmcp_client.py
 python examples/langgraph_client.py
 
 # Test specific lab management endpoints
-curl http://localhost:8080/mcp -X POST \
+curl http://localhost:8000/mcp -X POST \
   -H "Content-Type: application/json" \
   -d '{"method": "list_tools", "params": {}}'
 ```

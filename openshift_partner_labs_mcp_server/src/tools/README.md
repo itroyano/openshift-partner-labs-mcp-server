@@ -82,9 +82,7 @@ self.mcp.tool()(your_tool_function)
 
 
 ### **Utility Tools**
-- `multiply_tool.py` - Basic arithmetic operations for capacity planning
-- `code_review_tool.py` - Generate code review prompts
-- `redhat_logo_tool.py` - Red Hat branding asset retrieval
+(No utility tools currently available)
 
 ## 📦 **Archived Tools**
 

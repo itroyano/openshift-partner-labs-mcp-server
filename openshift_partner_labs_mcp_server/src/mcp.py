@@ -16,15 +16,6 @@ from fastmcp import FastMCP
 from openshift_partner_labs_mcp_server.src.settings import settings
 
 # Import tools from the tools package
-from openshift_partner_labs_mcp_server.src.tools.code_review_tool import (
-    generate_code_review_prompt,
-)
-from openshift_partner_labs_mcp_server.src.tools.multiply_tool import (
-    multiply_numbers,
-)
-from openshift_partner_labs_mcp_server.src.tools.redhat_logo_tool import (
-    get_redhat_logo,
-)
 
 # Import lab management and company tools
 from openshift_partner_labs_mcp_server.src.tools.lab_tools import (
@@ -74,7 +65,6 @@ class PartnerLabsMCPServer:
     Tools (for actions):
     - Lab lifecycle management (create, approve, deny, complete, extend)
     - Company management (create, mark curated)
-    - Utility tools (multiply, code review prompts, logo retrieval)
 
     Resources (for data access):
     - Lab collections and individual lab details
@@ -179,10 +169,7 @@ class PartnerLabsMCPServer:
         Registers action-oriented tools with the FastMCP server instance.
         In hybrid architecture, tools handle state modifications while resources provide data access.
 
-        Template tools:
-        - multiply_numbers: Basic arithmetic operations
-        - generate_code_review_prompt: Code review prompt generation
-        - get_redhat_logo: Red Hat logo retrieval as base64 (DEPRECATED: Use assets://redhat-logo resource)
+        Template tools (removed):
 
         Lab lifecycle management tools (active):
         - create_lab: Create new partner lab requests
@@ -205,10 +192,7 @@ class PartnerLabsMCPServer:
         Note: Data access tools are maintained for backward compatibility but clients
         should prefer using resources for better performance and caching.
         """
-        # Register template tools
-        self.mcp.tool()(multiply_numbers)
-        self.mcp.tool()(generate_code_review_prompt)
-        self.mcp.tool()(get_redhat_logo)
+        # Register template tools (removed)
 
         # Register lab management tools
         self.mcp.tool()(create_lab)
