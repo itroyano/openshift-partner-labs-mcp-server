@@ -89,7 +89,7 @@ addopts = [
 markers = ["asyncio"]
 
 [tool.coverage.run]
-source = ["src"]
+source = ["openshift_partner_labs_mcp_server"]
 omit = [
     "*/tests/*",
     "*/test_*",

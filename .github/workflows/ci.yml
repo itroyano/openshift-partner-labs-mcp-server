@@ -1,5 +1,9 @@
 name: CI
 
+# Comprehensive CI pipeline for OpenShift Partner Labs MCP Server
+# Tests include: quality checks, unit tests, container builds, and validation
+# Updated to support current test structure after tool deprecation cleanup
+
 on:
   push:
     branches: [main]
@@ -16,7 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.12"]
+        python-version: ["3.12", "3.13"]
       fail-fast: false
 
     steps:
@@ -34,6 +38,29 @@ jobs:
       - name: Install dependencies
         run: uv pip install -e ".[dev]" --system
 
+      - name: Create .env file for tests
+        run: |
+          cp .env .env.backup 2>/dev/null || echo "No existing .env file"
+          cat > .env << 'EOF'
+          # MCP Server Configuration
+          MCP_HOST=0.0.0.0
+          MCP_PORT=8000
+          MCP_TRANSPORT_PROTOCOL=http
+          ENABLE_AUTH=false
+          USE_EXTERNAL_BROWSER_AUTH=false
+          COMPATIBLE_WITH_CURSOR=False
+          PYTHON_LOG_LEVEL=INFO
+          SSO_CLIENT_ID=test_client_id
+          SSO_CLIENT_SECRET=test_client_secret
+          SSO_ISSUER_HOST=https://auth.redhat.com/auth/realms/EmployeeIDP
+          SSO_CALLBACK_URL=http://localhost:8000/auth/callback/oidc
+          DATABASE_HOST=localhost
+          DATABASE_PORT=5432
+          DATABASE_DB=${{ secrets.DB_NAME }}
+          DATABASE_USER=${{ secrets.DB_USER }}
+          DATABASE_PASSWORD=${{ secrets.DB_PASSWORD }}
+          EOF
+
       - name: Cache pre-commit
         uses: actions/cache@v4
         with:
@@ -46,7 +73,7 @@ jobs:
         if: matrix.python-version == '3.12'
 
       - name: Run tests
-        run: pytest tests/ -v -k "not test_container_startup_and_health" --cov --cov-report=xml
+        run: pytest tests/ -v --cov=openshift_partner_labs_mcp_server --cov-report=xml
 
       - name: Upload coverage reports
         uses: codecov/codecov-action@v4
@@ -54,6 +81,17 @@ jobs:
         with:
           file: ./coverage.xml
           fail_ci_if_error: false
+
+      - name: Restore original .env file
+        run: |
+          if [ -f .env.backup ]; then
+            mv .env.backup .env
+            echo "Restored original .env file"
+          else
+            rm -f .env
+            echo "Removed test .env file"
+          fi
+        if: always()
 
   validate-build:
     name: Validate Build
@@ -98,8 +136,29 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+      - name: Create .env file for container tests
+        run: |
+          cat > .env << 'EOF'
+          MCP_HOST=0.0.0.0
+          MCP_PORT=8000
+          MCP_TRANSPORT_PROTOCOL=http
+          ENABLE_AUTH=false
+          USE_EXTERNAL_BROWSER_AUTH=false
+          COMPATIBLE_WITH_CURSOR=False
+          PYTHON_LOG_LEVEL=INFO
+          SSO_CLIENT_ID=test_client_id
+          SSO_CLIENT_SECRET=test_client_secret
+          SSO_ISSUER_HOST=https://auth.redhat.com/auth/realms/EmployeeIDP
+          SSO_CALLBACK_URL=http://localhost:8000/auth/callback/oidc
+          DATABASE_HOST=localhost
+          DATABASE_PORT=5432
+          DATABASE_DB=${{ secrets.DB_NAME }}
+          DATABASE_USER=${{ secrets.DB_USER }}
+          DATABASE_PASSWORD=${{ secrets.DB_PASSWORD }}
+          EOF
+
       - name: Test container startup
         run: |
           docker build -t test-image -f Containerfile .
           # Test that the container can start without errors
-          timeout 30s docker run --rm test-image --help || true
+          timeout 30s docker run --rm --env-file .env test-image --help || true
